@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings("serial")
 public class AdminRulesTableDataProvider extends RulesDataProvider<MutableAdminRule> {
 
-    public static final Property<MutableAdminRule> PRIORITY = RuleBeanProperty.of("priority");
+    public static final Property<MutableAdminRule> PRIORITY = RulesTablePanel.priority();
     public static final Property<MutableAdminRule> INSTANCE = RuleBeanProperty.of("instanceName");
     public static final Property<MutableAdminRule> ROLE = RuleBeanProperty.of("roleName");
     public static final Property<MutableAdminRule> USER = RuleBeanProperty.of("userName");

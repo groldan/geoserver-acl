@@ -12,10 +12,7 @@ import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.geoserver.acl.plugin.web.accessrules.model.DataAccessRuleEditModel;
 import org.geoserver.acl.plugin.web.accessrules.model.DataAccessRulesDataProvider;
-import org.geoserver.acl.plugin.web.accessrules.model.MutableRule;
-import org.geoserver.acl.plugin.web.components.RulesTablePanel;
 import org.geoserver.web.GeoServerSecuredPage;
-import org.geoserver.web.wicket.GeoServerTablePanel;
 
 /**
  * @author Niels Charlier - Originally as part of GeoFence's GeoServer extension
@@ -25,7 +22,7 @@ public class AccessRulesACLPage extends GeoServerSecuredPage {
 
     private DataAccessRulesDataProvider dataProvider;
 
-    private GeoServerTablePanel<MutableRule> rulesPanel;
+    private AccessRulesTablePanel rulesPanel;
 
     private AjaxLink<Object> removeLink;
 
@@ -65,8 +62,8 @@ public class AccessRulesACLPage extends GeoServerSecuredPage {
         };
     }
 
-    private RulesTablePanel<MutableRule> rulesTablePanel() {
-        RulesTablePanel<MutableRule> panel = new RulesTablePanel<>("rulesPanel", dataProvider);
+    private AccessRulesTablePanel rulesTablePanel() {
+        AccessRulesTablePanel panel = new AccessRulesTablePanel("rulesPanel", dataProvider);
         panel.setOnDrop(
                 (moved, target) -> {
                     dataProvider.onDrop(moved, target);

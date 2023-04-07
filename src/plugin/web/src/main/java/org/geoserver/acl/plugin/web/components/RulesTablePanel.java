@@ -13,6 +13,7 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.ComponentTag;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.DefaultItemReuseStrategy;
@@ -21,7 +22,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.geoserver.acl.plugin.web.support.SerializableBiConsumer;
 import org.geoserver.acl.plugin.web.support.SerializableConsumer;
-import org.geoserver.catalog.MetadataMap;
+import org.geoserver.web.wicket.GeoServerDataProvider.BeanProperty;
 import org.geoserver.web.wicket.GeoServerDataProvider.Property;
 import org.geoserver.web.wicket.GeoServerDataProvider.PropertyPlaceholder;
 import org.geoserver.web.wicket.GeoServerTablePanel;
@@ -36,6 +37,7 @@ import wicketdnd.Transfer;
 import wicketdnd.theme.WebTheme;
 
 import java.io.Serializable;
+import java.util.function.Supplier;
 
 /**
  * {@link GeoServerTablePanel} for an {@link RulesDataProvider}
@@ -43,12 +45,17 @@ import java.io.Serializable;
  * @param <R>
  */
 @SuppressWarnings("serial")
-public final class RulesTablePanel<R extends Serializable> extends GeoServerTablePanel<R> {
+public class RulesTablePanel<R extends Serializable> extends GeoServerTablePanel<R> {
+
+    /**
+     * @see #priority()
+     */
+    protected static final Property<?> PRIORITY = new BeanProperty<>("priority");
 
     /**
      * @see #buttons()
      */
-    private static final Property<?> BUTTONS = new PropertyPlaceholder<>("buttons");
+    protected static final Property<?> BUTTONS = new PropertyPlaceholder<>("buttons");
 
     private @NonNull @Setter SerializableConsumer<AjaxRequestTarget> onSelectionUpdate = t -> {};
 
@@ -57,21 +64,31 @@ public final class RulesTablePanel<R extends Serializable> extends GeoServerTabl
     private @NonNull @Setter SerializableBiConsumer<R, R> onDrop = (moved, target) -> {};
 
     @SuppressWarnings("unchecked")
+    public static <T> Property<T> priority() {
+        return (Property<T>) PRIORITY;
+    }
+
+    @SuppressWarnings("unchecked")
     public static <T> Property<T> buttons() {
         return (Property<T>) BUTTONS;
     }
+
+    protected WebMarkupContainer listContainer;
 
     public RulesTablePanel(String id, RulesDataProvider<R> dataProvider) {
         super(id, dataProvider, true /* selectable */);
         setOutputMarkupId(true);
 
-        // re-create items, data is reloaded on each mutation like DnD, remove selected, etc
+        // re-create items, data is reloaded on each mutation like DnD, remove selected,
+        // etc
         DataView<?> items = (DataView<?>) super.get("listContainer:items");
         items.setItemReuseStrategy(DefaultItemReuseStrategy.getInstance());
 
         add(new WebTheme());
         add(dragSourceBehavior());
         add(dropTargetBehavior());
+        listContainer = (WebMarkupContainer) get("listContainer");
+        listContainer.add(new AttributeModifier("class", "rulestable"));
     }
 
     private DragSource dragSourceBehavior() {
@@ -116,7 +133,7 @@ public final class RulesTablePanel<R extends Serializable> extends GeoServerTabl
         return new TableData(id, property.getModel(itemModel));
     }
 
-    static class TableData extends Panel {
+    protected static class TableData extends Panel {
 
         public TableData(String id, IModel<?> itemModel) {
             super(id);
@@ -129,8 +146,14 @@ public final class RulesTablePanel<R extends Serializable> extends GeoServerTabl
         onSelectionUpdate.accept(target);
     }
 
-    private MetadataMap getMetaDataMapFromSession(String key) {
-        return (MetadataMap) getSession().getAttribute(key);
+    protected <T extends Serializable> T getFromSession(String key, Supplier<T> defaultValue) {
+        @SuppressWarnings("unchecked")
+        T v = (T) getSession().getAttribute(key);
+        if (null == v) {
+            v = defaultValue.get();
+            getSession().setAttribute(key, v);
+        }
+        return v;
     }
 
     public class UpDownButtonsPanel extends Panel {
@@ -203,14 +226,14 @@ public final class RulesTablePanel<R extends Serializable> extends GeoServerTabl
             setImgAlt(editLink, "RulesTablePanel.buttons.edit");
             return editLink;
         }
+    }
 
-        private void setImgAlt(ImageAjaxLink<Object> link, String resourceKey) {
-            link.getImage()
-                    .add(new AttributeModifier("alt", new ParamResourceModel(resourceKey, link)));
-        }
+    private void setImgAlt(ImageAjaxLink<Object> link, String resourceKey) {
+        link.getImage()
+                .add(new AttributeModifier("alt", new ParamResourceModel(resourceKey, link)));
+    }
 
-        private PackageResourceReference imageRef(String imageName) {
-            return new PackageResourceReference(RulesTablePanel.class, imageName);
-        }
+    private PackageResourceReference imageRef(String imageName) {
+        return new PackageResourceReference(RulesTablePanel.class, imageName);
     }
 }

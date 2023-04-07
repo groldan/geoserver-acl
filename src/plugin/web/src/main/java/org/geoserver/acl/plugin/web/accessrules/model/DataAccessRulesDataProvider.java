@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings("serial")
 public class DataAccessRulesDataProvider extends RulesDataProvider<MutableRule> {
 
-    public static final Property<MutableRule> PRIORITY = new BeanProperty<>("priority");
+    public static final Property<MutableRule> PRIORITY = RulesTablePanel.priority();
     public static final Property<MutableRule> INSTANCE = RuleBeanProperty.of("instanceName");
     public static final Property<MutableRule> ROLE = RuleBeanProperty.of("roleName");
     public static final Property<MutableRule> USER = RuleBeanProperty.of("userName");

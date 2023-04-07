@@ -1,0 +1,63 @@
+<html xmlns:wicket="http://wicket.apache.org/">
+ <body>
+  <wicket:extend>
+    <wicket:fragment wicket:id="buttonsHeader">
+      <div class="floating-menu float-end">
+        <label class="menulabel" for="tableSettingsCheck">
+          <img wicket:id="tableSettingsButton" style="background-color:transparent;"/>
+        </label>
+        <input id="tableSettingsCheck" type="checkbox" checked/>
+        <div class="submenu">
+          <form>
+            <fieldset>
+              <legend>Visible columns</legend>
+              <ul>
+                <li>
+                  <input type="checkbox" wicket:id="instance"/>
+                  <label wicket:for="instance"><wicket:message key="AccessRulesACLPage.th.instanceName"/></label>
+                </li>
+                <li>
+                  <input type="checkbox" wicket:id="roleName"/>
+                  <label wicket:for="roleName"><wicket:message key="AccessRulesACLPage.th.roleName"/></label>
+                </li>
+                <li>
+                  <input type="checkbox" wicket:id="userName"/>
+                  <label wicket:for="userName"><wicket:message key="AccessRulesACLPage.th.userName"/></label>
+                </li>
+                <li>
+                  <input type="checkbox" wicket:id="service"/>
+                  <label wicket:for="service"><wicket:message key="AccessRulesACLPage.th.service"/></label>
+                </li>
+                <li>
+                  <input type="checkbox" wicket:id="request"/>
+                  <label wicket:for="request"><wicket:message key="AccessRulesACLPage.th.request"/></label>
+                </li>
+                <li>
+                  <input type="checkbox" wicket:id="subfield"/>
+                  <label wicket:for="subfield"><wicket:message key="AccessRulesACLPage.th.subfield"/></label>
+                </li>
+                <li>
+                  <input type="checkbox" wicket:id="workspace"/>
+                  <label wicket:for="workspace"><wicket:message key="AccessRulesACLPage.th.workspace"/></label>
+                </li>
+                <li>
+                  <input type="checkbox" wicket:id="layer"/>
+                  <label wicket:for="layer"><wicket:message key="AccessRulesACLPage.th.layer"/></label>
+                </li>
+                <li>
+                  <input type="checkbox" wicket:id="access"/>
+                  <label wicket:for="access"><wicket:message key="AccessRulesACLPage.th.access"/></label>
+                </li>
+                <li>
+                  <input type="checkbox" wicket:id="addressRange"/>
+                  <label wicket:for="addressRange"><wicket:message key="AccessRulesACLPage.th.addressRange"/></label>
+                </li>
+              </ul>
+            </fieldset>
+          </form>
+        </div>
+      </div>
+    </wicket:fragment>
+  </wicket:extend>
+ </body>
+</html>

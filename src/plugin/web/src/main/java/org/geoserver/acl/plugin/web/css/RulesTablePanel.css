@@ -33,3 +33,53 @@ td span div:hover span{
   background-color: white;
   display: inline-block;
 }
+
+/* fixed width for the buttons column */
+.rulestable thead tr th:last-of-type{
+	width: 54px;
+}
+
+/*
+ * Buttons column table header settings button menu
+ */
+/*position the label*/
+.floating-menu label {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+/*hide the inputs/checkmarks and submenu*/
+.floating-menu input[type="checkbox"]{
+	display:none;
+}
+
+.submenu{
+  z-index: 1000;
+}
+
+.submenu legend{
+  font-size: 1em;
+}
+
+.submenu input[type="checkbox"]{
+  display:unset;
+}
+.submenu li{
+  display: flex;
+  overflow: hidden;
+}
+.floating-menu div.submenu {
+  display: none;
+  background-color: var(--gs-table-bg-even);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  position: absolute;
+  width: max-content;
+  padding: 4px;
+  margin-top: 4px;
+  transform: translateX(-85%);
+}
+
+/*show the submenu when input is checked*/
+.floating-menu input[type="checkbox"]:checked~div.submenu{
+    display: block;
+}

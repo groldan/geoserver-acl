@@ -8,7 +8,10 @@ import com.google.common.base.Objects;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortParam;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.geoserver.web.wicket.GeoServerDataProvider;
+import org.geoserver.web.wicket.GeoServerDataProvider.Property;
 import org.springframework.dao.DuplicateKeyException;
 
 import java.util.ArrayList;
@@ -27,6 +30,11 @@ public abstract class RulesDataProvider<R> extends GeoServerDataProvider<R> {
     public RulesDataProvider(Class<R> modelClass) {
         this.modelClass = modelClass;
         setSort("priority", SortOrder.ASCENDING);
+    }
+
+    public IModel<List<Property<R>>> visibleProperties() {
+        List<Property<R>> properties = getProperties();
+        return Model.ofList(properties);
     }
 
     public Class<R> getModelClass() {
