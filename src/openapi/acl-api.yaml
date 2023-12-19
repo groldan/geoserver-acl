@@ -6,12 +6,14 @@ info:
 servers:
 - url: /api
 tags:
+  - name: Authorization
+    description: Access Control List based authorization requests
   - name: DataRules
     description: CRUD operations on GeoServer ACL Rules.
   - name: WorkspaceAdminRules
     description: CRUD operations on GeoServer ACL AdminRules.
-  - name: Authorization
-    description: Access Control List based authorization requests
+  - name: Management
+    description: API to perform bulk management operations
 security:
   - basicAuth: []
 paths:
@@ -630,6 +632,70 @@ paths:
         '200':
           $ref: '#/components/responses/PageOfRules'
 
+  /manage/rename/workspace:
+    post:
+      operationId: renameWorkspace
+      description: |-
+         Atomically updates all data and workspace admin rules for the specified workspace name change. 
+      tags:
+        - Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenameWorkspaceRequest'
+          application/x-jackson-smile:
+            schema:
+              $ref: '#/components/schemas/RenameWorkspaceRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/RenameResponse'
+        '400':
+          description: Bad request body, for example providing `null` on either the old or new workspace name
+        '409':
+          description: A Rule with the same target identifier already exists (i.e. with the same values for
+              username, rolename, service, request, subfield, workspace, layer, and addressRange)
+          headers:
+           X-Reason:
+             schema:
+               type: string
+               description: Error reason, including offending property names
+
+  /manage/rename/layer:
+    post:
+      operationId: renameLayer
+      description: |-
+         Atomically updates all data rules for the specified layer name change or workspace relocation.
+          
+         The request body asks to rename the layer name on all data rules for a given layer. If either `oldWorkspace` or `newWorkspace` is `null`,
+         it means the layer is a layer group and is being moved to/from a workspace as a global layer group. Although the ACL server
+         doesn't check it, the GeoServer plugin reacting to a layer rename is responsible of doing so.
+      tags:
+        - Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenameLayerRequest'
+          application/x-jackson-smile:
+            schema:
+              $ref: '#/components/schemas/RenameLayerRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/RenameResponse'
+        '400':
+          description: Bad request body, for example providing `null` on either the old or new layer name
+        '409':
+          description: A Rule with the same target identifier already exists (i.e. with the same values for
+              username, rolename, service, request, subfield, workspace, layer, and addressRange)
+          headers:
+           X-Reason:
+             schema:
+               type: string
+               description: Error reason, including offending property names
+
 components:
   securitySchemes:
     basicAuth:
@@ -757,6 +823,15 @@ components:
         application/x-jackson-smile:
           schema:
             $ref: '#/components/schemas/AdminAccessInfo'
+    RenameResponse:
+      description: List of data and/or admin rule ids affeted by the execution of a RenameWorkspaceRequest or RenameLayerRequest
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RenameResponse'
+        application/x-jackson-smile:
+          schema:
+            $ref: '#/components/schemas/RenameResponse'
   schemas:
     CatalogMode:
       type: string
@@ -1156,4 +1231,51 @@ components:
           type: string
         matchingAdminRule:
           type: string
-        
+    
+    RenameWorkspaceRequest:
+      type: object
+      description: Request to rename the workspace on all data and workspace admin rules for workspace `oldName` to `newName`
+      required:
+      - oldName
+      - newName
+      properties:
+        oldName:
+           type: string
+        newName:
+          type: string
+          
+    RenameLayerRequest:
+      type: object
+      description: |-
+         Request to rename the layer name on all data rules for a given layer. If either `oldWorkspace` or `newWorkspace` is `null`,
+         it means the layer is a layer group and is being moved to/from a workspace as a global layer group, although the ACL server
+         doesn't check it, the GeoServer plugin reacting to a layer rename is responsible.
+      required:
+      - oldName
+      - newName
+      properties:
+        oldWorkspace:
+           type: string
+        oldName:
+           type: string
+        newWorkspace:
+          type: string
+        newName:
+          type: string
+
+    RenameResponse:
+      type: object
+      description: List of data and/or admin rule ids affeted by the execution of a RenameWorkspaceRequest or RenameLayerRequest
+      properties:
+        dataRules:
+          type: array
+          nullable: true
+          uniqueItems: true
+          items:
+            type: string
+        adminRules:
+          type: array
+          nullable: true
+          uniqueItems: true
+          items:
+            type: string

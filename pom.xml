@@ -119,6 +119,11 @@
       </dependency>
       <dependency>
         <groupId>org.geoserver.acl</groupId>
+        <artifactId>gs-acl-management</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geoserver.acl</groupId>
         <artifactId>gs-acl-authorization</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>

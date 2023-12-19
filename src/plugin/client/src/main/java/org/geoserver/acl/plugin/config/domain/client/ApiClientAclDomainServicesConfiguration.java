@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.geoserver.acl.api.client.AuthorizationApi;
 import org.geoserver.acl.api.client.DataRulesApi;
+import org.geoserver.acl.api.client.ManagementApi;
 import org.geoserver.acl.api.client.WorkspaceAdminRulesApi;
 import org.geoserver.acl.api.client.config.ApiClientConfiguration;
 import org.geoserver.acl.api.client.config.ApiClientProperties;
@@ -25,7 +26,7 @@ import org.springframework.core.env.Environment;
  * that works by delegating to a remote ACL service through the OpenAPI HTTP interface.
  *
  * <p>{@link ApiClientConfiguration} sets up the pure OpenAPI clients {@link DataRulesApi}, {@link
- * WorkspaceAdminRulesApi}, and {@link AuthorizationApi} Java clients.
+ * WorkspaceAdminRulesApi}, {@link AuthorizationApi}, and {@link ManagementApi} Java clients.
  *
  * <p>{@link RepositoryClientAdaptorsConfiguration} provides GeoServer ACL repository
  * implementations that adapt the OpenAPI client to ACL's domain repositories.

@@ -5,6 +5,7 @@
 package org.geoserver.acl.autoconfigure.api;
 
 import org.geoserver.acl.api.server.config.AuthorizationApiConfiguration;
+import org.geoserver.acl.api.server.config.ManagementApiConfiguration;
 import org.geoserver.acl.api.server.config.RulesApiConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -12,8 +13,12 @@ import org.springframework.context.annotation.Import;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
 @AutoConfiguration
-@Import({RulesApiConfiguration.class, AuthorizationApiConfiguration.class})
-public class RulesApiAutoConfiguration {
+@Import({
+    RulesApiConfiguration.class,
+    AuthorizationApiConfiguration.class,
+    ManagementApiConfiguration.class
+})
+public class ApiAutoConfiguration {
 
     @Bean
     CommonsRequestLoggingFilter commonsRequestLoggingFilter() {

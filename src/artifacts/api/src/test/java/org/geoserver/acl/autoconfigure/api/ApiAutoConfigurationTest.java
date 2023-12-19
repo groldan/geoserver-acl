@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 
 import org.geoserver.acl.api.server.AuthorizationApiController;
 import org.geoserver.acl.api.server.DataRulesApiController;
+import org.geoserver.acl.api.server.ManagementApiController;
 import org.geoserver.acl.api.server.WorkspaceAdminRulesApiController;
 import org.geoserver.acl.domain.adminrules.AdminRuleRepository;
 import org.geoserver.acl.domain.rules.RuleRepository;
@@ -17,11 +18,11 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.web.context.request.NativeWebRequest;
 
-class RulesApiAutoConfigurationTest {
+class ApiAutoConfigurationTest {
 
     private ApplicationContextRunner runner =
             new ApplicationContextRunner()
-                    .withConfiguration(AutoConfigurations.of(RulesApiAutoConfiguration.class))
+                    .withConfiguration(AutoConfigurations.of(ApiAutoConfiguration.class))
                     // expected dependencies:
                     .withBean(RuleRepository.class, () -> mock(RuleRepository.class))
                     .withBean(AdminRuleRepository.class, () -> mock(AdminRuleRepository.class))
@@ -35,7 +36,8 @@ class RulesApiAutoConfigurationTest {
                             .hasNotFailed()
                             .hasSingleBean(DataRulesApiController.class)
                             .hasSingleBean(WorkspaceAdminRulesApiController.class)
-                            .hasSingleBean(AuthorizationApiController.class);
+                            .hasSingleBean(AuthorizationApiController.class)
+                            .hasSingleBean(ManagementApiController.class);
                 });
     }
 }

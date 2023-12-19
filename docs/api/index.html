@@ -1157,6 +1157,60 @@ ul.nav-tabs {
   "description" : "Details may be set only for ules with non-wildcarded profile, workspace, layer",
   "nullable" : true
 };
+    defs["RenameLayerRequest"] = {
+  "required" : [ "newName", "oldName" ],
+  "type" : "object",
+  "properties" : {
+    "oldWorkspace" : {
+      "type" : "string"
+    },
+    "oldName" : {
+      "type" : "string"
+    },
+    "newWorkspace" : {
+      "type" : "string"
+    },
+    "newName" : {
+      "type" : "string"
+    }
+  },
+  "description" : "Request to rename the layer name on all data rules for a given layer. If either `oldWorkspace` or `newWorkspace` is `null`,\nit means the layer is a layer group and is being moved to/from a workspace as a global layer group, although the ACL server\ndoesn't check it, the GeoServer plugin reacting to a layer rename is responsible."
+};
+    defs["RenameResponse"] = {
+  "type" : "object",
+  "properties" : {
+    "dataRules" : {
+      "uniqueItems" : true,
+      "type" : "array",
+      "nullable" : true,
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "adminRules" : {
+      "uniqueItems" : true,
+      "type" : "array",
+      "nullable" : true,
+      "items" : {
+        "type" : "string"
+      }
+    }
+  },
+  "description" : "List of data and/or admin rule ids affeted by the execution of a RenameWorkspaceRequest or RenameLayerRequest"
+};
+    defs["RenameWorkspaceRequest"] = {
+  "required" : [ "newName", "oldName" ],
+  "type" : "object",
+  "properties" : {
+    "oldName" : {
+      "type" : "string"
+    },
+    "newName" : {
+      "type" : "string"
+    }
+  },
+  "description" : "Request to rename the workspace on all data and workspace admin rules for workspace `oldName` to `newName`"
+};
     defs["Rule"] = {
   "required" : [ "access", "priority" ],
   "type" : "object",
@@ -1403,6 +1457,13 @@ ul.nav-tabs {
                     </li>
                     <li data-group="DataRules" data-name="updateRuleById" class="">
                       <a href="#api-DataRules-updateRuleById">updateRuleById</a>
+                    </li>
+                  <li class="nav-header" data-group="Management"><a href="#api-Management">API Methods - Management</a></li>
+                    <li data-group="Management" data-name="renameLayer" class="">
+                      <a href="#api-Management-renameLayer">renameLayer</a>
+                    </li>
+                    <li data-group="Management" data-name="renameWorkspace" class="">
+                      <a href="#api-Management-renameWorkspace">renameWorkspace</a>
                     </li>
                   <li class="nav-header" data-group="WorkspaceAdminRules"><a href="#api-WorkspaceAdminRules">API Methods - WorkspaceAdminRules</a></li>
                     <li data-group="WorkspaceAdminRules" data-name="adminRuleExistsById" class="">
@@ -9960,6 +10021,953 @@ $(document).ready(function() {
 
 
                             <div class="tab-content" id="responses-DataRules-updateRuleById-409-wrapper" style='margin-bottom: 10px;'>
+                            </div>
+                        </article>
+                      </div>
+                      <hr>
+                  </section>
+                <section id="api-Management">
+                  <h1>Management</h1>
+                    <div id="api-Management-renameLayer">
+                      <article id="api-Management-renameLayer-0" data-group="User" data-name="renameLayer" data-version="0">
+                        <div class="pull-left">
+                          <h1>renameLayer</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Atomically updates all data rules for the specified layer name change or workspace relocation.
+ 
+The request body asks to rename the layer name on all data rules for a given layer. If either &#x60;oldWorkspace&#x60; or &#x60;newWorkspace&#x60; is &#x60;null&#x60;,
+it means the layer is a layer group and is being moved to/from a workspace as a global layer group. Although the ACL server
+doesn&#39;t check it, the GeoServer plugin reacting to a layer rename is responsible of doing so.</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/manage/rename/layer</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Management-renameLayer-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Management-renameLayer-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Management-renameLayer-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-Management-renameLayer-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Management-renameLayer-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Management-renameLayer-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Management-renameLayer-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Management-renameLayer-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Management-renameLayer-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Management-renameLayer-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Management-renameLayer-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Management-renameLayer-0-python">Python</a></li>
+                          <li class=""><a href="#examples-Management-renameLayer-0-rust">Rust</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Management-renameLayer-0-curl">
+                            <pre class="prettyprint"><code class="language-bsh">curl -X POST \
+ -H "Authorization: Basic [[basicHash]]" \
+ -H "Accept: application/json,application/x-jackson-smile" \
+ -H "Content-Type: application/json,application/x-jackson-smile" \
+ "/api/manage/rename/layer" \
+ -d '{
+  &quot;oldWorkspace&quot; : &quot;oldWorkspace&quot;,
+  &quot;newName&quot; : &quot;newName&quot;,
+  &quot;oldName&quot; : &quot;oldName&quot;,
+  &quot;newWorkspace&quot; : &quot;newWorkspace&quot;
+}' \
+ -d 'Custom MIME type example not yet supported: application/x-jackson-smile'
+</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Management-renameLayer-0-java">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
+import org.openapitools.client.auth.*;
+import org.openapitools.client.model.*;
+import org.openapitools.client.api.ManagementApi;
+
+import java.io.File;
+import java.util.*;
+
+public class ManagementApiExample {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        // Configure HTTP basic authorization: basicAuth
+        HttpBasicAuth basicAuth = (HttpBasicAuth) defaultClient.getAuthentication("basicAuth");
+        basicAuth.setUsername("YOUR USERNAME");
+        basicAuth.setPassword("YOUR PASSWORD");
+
+        // Create an instance of the API class
+        ManagementApi apiInstance = new ManagementApi();
+        RenameLayerRequest renameLayerRequest = ; // RenameLayerRequest | 
+
+        try {
+            RenameResponse result = apiInstance.renameLayer(renameLayerRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling ManagementApi#renameLayer");
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Management-renameLayer-0-dart">
+                            <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
+
+final api_instance = DefaultApi();
+
+final RenameLayerRequest renameLayerRequest = new RenameLayerRequest(); // RenameLayerRequest | 
+
+try {
+    final result = await api_instance.renameLayer(renameLayerRequest);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->renameLayer: $e\n');
+}
+
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Management-renameLayer-0-android">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.ManagementApi;
+
+public class ManagementApiExample {
+    public static void main(String[] args) {
+        ManagementApi apiInstance = new ManagementApi();
+        RenameLayerRequest renameLayerRequest = ; // RenameLayerRequest | 
+
+        try {
+            RenameResponse result = apiInstance.renameLayer(renameLayerRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling ManagementApi#renameLayer");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Management-renameLayer-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Management-renameLayer-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+// Configure HTTP basic authorization (authentication scheme: basicAuth)
+[apiConfig setUsername:@"YOUR_USERNAME"];
+[apiConfig setPassword:@"YOUR_PASSWORD"];
+
+// Create an instance of the API class
+ManagementApi *apiInstance = [[ManagementApi alloc] init];
+RenameLayerRequest *renameLayerRequest = ; // 
+
+[apiInstance renameLayerWith:renameLayerRequest
+              completionHandler: ^(RenameResponse output, NSError* error) {
+    if (output) {
+        NSLog(@"%@", output);
+    }
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+}];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Management-renameLayer-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var GeoServerAcl = require('geo_server_acl');
+var defaultClient = GeoServerAcl.ApiClient.instance;
+
+// Configure HTTP basic authorization: basicAuth
+var basicAuth = defaultClient.authentications['basicAuth'];
+basicAuth.username = 'YOUR USERNAME';
+basicAuth.password = 'YOUR PASSWORD';
+
+// Create an instance of the API class
+var api = new GeoServerAcl.ManagementApi()
+var renameLayerRequest = ; // {RenameLayerRequest} 
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.renameLayer(renameLayerRequest, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Management-renameLayer-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Management-renameLayer-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using Org.OpenAPITools.Api;
+using Org.OpenAPITools.Client;
+using Org.OpenAPITools.Model;
+
+namespace Example
+{
+    public class renameLayerExample
+    {
+        public void main()
+        {
+            // Configure HTTP basic authorization: basicAuth
+            Configuration.Default.Username = "YOUR_USERNAME";
+            Configuration.Default.Password = "YOUR_PASSWORD";
+
+            // Create an instance of the API class
+            var apiInstance = new ManagementApi();
+            var renameLayerRequest = new RenameLayerRequest(); // RenameLayerRequest | 
+
+            try {
+                RenameResponse result = apiInstance.renameLayer(renameLayerRequest);
+                Debug.WriteLine(result);
+            } catch (Exception e) {
+                Debug.Print("Exception when calling ManagementApi.renameLayer: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Management-renameLayer-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+// Configure HTTP basic authorization: basicAuth
+OpenAPITools\Client\Configuration::getDefaultConfiguration()->setUsername('YOUR_USERNAME');
+OpenAPITools\Client\Configuration::getDefaultConfiguration()->setPassword('YOUR_PASSWORD');
+
+// Create an instance of the API class
+$api_instance = new OpenAPITools\Client\Api\ManagementApi();
+$renameLayerRequest = ; // RenameLayerRequest | 
+
+try {
+    $result = $api_instance->renameLayer($renameLayerRequest);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling ManagementApi->renameLayer: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Management-renameLayer-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::OPenAPIClient::Configuration;
+use WWW::OPenAPIClient::ManagementApi;
+# Configure HTTP basic authorization: basicAuth
+$WWW::OPenAPIClient::Configuration::username = 'YOUR_USERNAME';
+$WWW::OPenAPIClient::Configuration::password = 'YOUR_PASSWORD';
+
+# Create an instance of the API class
+my $api_instance = WWW::OPenAPIClient::ManagementApi->new();
+my $renameLayerRequest = WWW::OPenAPIClient::Object::RenameLayerRequest->new(); # RenameLayerRequest | 
+
+eval {
+    my $result = $api_instance->renameLayer(renameLayerRequest => $renameLayerRequest);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling ManagementApi->renameLayer: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Management-renameLayer-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import openapi_client
+from openapi_client.rest import ApiException
+from pprint import pprint
+# Configure HTTP basic authorization: basicAuth
+openapi_client.configuration.username = 'YOUR_USERNAME'
+openapi_client.configuration.password = 'YOUR_PASSWORD'
+
+# Create an instance of the API class
+api_instance = openapi_client.ManagementApi()
+renameLayerRequest =  # RenameLayerRequest | 
+
+try:
+    api_response = api_instance.rename_layer(renameLayerRequest)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling ManagementApi->renameLayer: %s\n" % e)</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Management-renameLayer-0-rust">
+                              <pre class="prettyprint"><code class="language-rust">extern crate ManagementApi;
+
+pub fn main() {
+    let renameLayerRequest = ; // RenameLayerRequest
+
+    let mut context = ManagementApi::Context::default();
+    let result = client.renameLayer(renameLayerRequest, &context).wait();
+
+    println!("{:?}", result);
+}
+</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Scopes</h2>
+                          <table>
+                            
+                          </table>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">renameLayerRequest <span style="color:red;">*</span></td>
+<td>
+<p class="marked"></p>
+<script>
+$(document).ready(function() {
+  var schemaWrapper = {
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/RenameLayerRequest"
+      }
+    },
+    "application/x-jackson-smile" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/RenameLayerRequest"
+      }
+    }
+  },
+  "required" : true
+};
+
+  var schema = findNode('schema',schemaWrapper).schema;
+  if (!schema) {
+    schema = schemaWrapper.schema;
+  }
+  if (schema.$ref != null) {
+    schema = defsParser.$refs.get(schema.$ref);
+  } else {
+    schemaWrapper.definitions = Object.assign({}, defs);
+    $RefParser.dereference(schemaWrapper).catch(function(err) {
+      console.log(err);
+    });
+  }
+
+  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+  var result = $('#d2e199_renameLayer_renameLayerRequest');
+  result.empty();
+  result.append(view.render());
+});
+</script>
+<div id="d2e199_renameLayer_renameLayerRequest"></div>
+</td>
+</tr>
+
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3 id="examples-Management-renameLayer-title-200"></h3>
+                            <p id="examples-Management-renameLayer-description-200" class="marked"></p>
+                            <script>
+                              var responseManagement200_description = `List of data and/or admin rule ids affeted by the execution of a RenameWorkspaceRequest or RenameLayerRequest`;
+                              var responseManagement200_description_break = responseManagement200_description.indexOf('\n');
+                              if (responseManagement200_description_break == -1) {
+                                $("#examples-Management-renameLayer-title-200").text("Status: 200 - " + responseManagement200_description);
+                              } else {
+                                $("#examples-Management-renameLayer-title-200").text("Status: 200 - " + responseManagement200_description.substring(0, responseManagement200_description_break));
+                                $("#examples-Management-renameLayer-description-200").html(responseManagement200_description.substring(responseManagement200_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Management-renameLayer-200" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Management-renameLayer-200-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Management-renameLayer-200-wrapper" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-Management-renameLayer-200-schema">
+                                  <div id="responses-Management-renameLayer-schema-200" class="exampleStyle">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = ;
+                                        var schema = findNode('schema',schemaWrapper).schema;
+                                        if (!schema) {
+                                          schema = schemaWrapper.schema;
+                                        }
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        } else if (schema.items != null && schema.items.$ref != null) {
+                                            schema.items = defsParser.$refs.get(schema.items.$ref);
+                                        } else {
+                                          schemaWrapper.definitions = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-Management-renameLayer-200-schema-data').val(JSON.stringify(schema));
+                                        var result = $('#responses-Management-renameLayer-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-Management-renameLayer-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+                            <h3 id="examples-Management-renameLayer-title-400"></h3>
+                            <p id="examples-Management-renameLayer-description-400" class="marked"></p>
+                            <script>
+                              var responseManagement400_description = `Bad request body, for example providing `null` on either the old or new layer name`;
+                              var responseManagement400_description_break = responseManagement400_description.indexOf('\n');
+                              if (responseManagement400_description_break == -1) {
+                                $("#examples-Management-renameLayer-title-400").text("Status: 400 - " + responseManagement400_description);
+                              } else {
+                                $("#examples-Management-renameLayer-title-400").text("Status: 400 - " + responseManagement400_description.substring(0, responseManagement400_description_break));
+                                $("#examples-Management-renameLayer-description-400").html(responseManagement400_description.substring(responseManagement400_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Management-renameLayer-400" class="nav nav-tabs nav-tabs-examples" >
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Management-renameLayer-400-wrapper" style='margin-bottom: 10px;'>
+                            </div>
+                            <h3 id="examples-Management-renameLayer-title-409"></h3>
+                            <p id="examples-Management-renameLayer-description-409" class="marked"></p>
+                            <script>
+                              var responseManagement409_description = `A Rule with the same target identifier already exists (i.e. with the same values for username, rolename, service, request, subfield, workspace, layer, and addressRange)`;
+                              var responseManagement409_description_break = responseManagement409_description.indexOf('\n');
+                              if (responseManagement409_description_break == -1) {
+                                $("#examples-Management-renameLayer-title-409").text("Status: 409 - " + responseManagement409_description);
+                              } else {
+                                $("#examples-Management-renameLayer-title-409").text("Status: 409 - " + responseManagement409_description.substring(0, responseManagement409_description_break));
+                                $("#examples-Management-renameLayer-description-409").html(responseManagement409_description.substring(responseManagement409_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Management-renameLayer-409" class="nav nav-tabs nav-tabs-examples" >
+
+                                <li class="">
+                                  <a data-toggle="tab" href="#responses-renameLayer-409-headers">Headers</a>
+                                </li>
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Management-renameLayer-409-wrapper" style='margin-bottom: 10px;'>
+                                  <div class="tab-pane" id="responses-renameLayer-409-headers">
+                                      <table>
+                                          <tr>
+                                              <th width="150px">Name</th>
+                                              <th width="100px">Type</th>
+                                              <th width="100px">Format</th>
+                                              <th>Description</th>
+                                          </tr>
+                                              <tr>
+                                                  <td>XMinusReason</td>
+                                                  <td>String</td>
+                                                  <td></td>
+                                                  <td></td>
+                                              </tr>
+                                      </table>
+                                  </div>
+                            </div>
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Management-renameWorkspace">
+                      <article id="api-Management-renameWorkspace-0" data-group="User" data-name="renameWorkspace" data-version="0">
+                        <div class="pull-left">
+                          <h1>renameWorkspace</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Atomically updates all data and workspace admin rules for the specified workspace name change. </p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/manage/rename/workspace</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Management-renameWorkspace-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Management-renameWorkspace-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Management-renameWorkspace-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-Management-renameWorkspace-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Management-renameWorkspace-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Management-renameWorkspace-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Management-renameWorkspace-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Management-renameWorkspace-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Management-renameWorkspace-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Management-renameWorkspace-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Management-renameWorkspace-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Management-renameWorkspace-0-python">Python</a></li>
+                          <li class=""><a href="#examples-Management-renameWorkspace-0-rust">Rust</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Management-renameWorkspace-0-curl">
+                            <pre class="prettyprint"><code class="language-bsh">curl -X POST \
+ -H "Authorization: Basic [[basicHash]]" \
+ -H "Accept: application/json,application/x-jackson-smile" \
+ -H "Content-Type: application/json,application/x-jackson-smile" \
+ "/api/manage/rename/workspace" \
+ -d '{
+  &quot;newName&quot; : &quot;newName&quot;,
+  &quot;oldName&quot; : &quot;oldName&quot;
+}' \
+ -d 'Custom MIME type example not yet supported: application/x-jackson-smile'
+</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Management-renameWorkspace-0-java">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
+import org.openapitools.client.auth.*;
+import org.openapitools.client.model.*;
+import org.openapitools.client.api.ManagementApi;
+
+import java.io.File;
+import java.util.*;
+
+public class ManagementApiExample {
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        // Configure HTTP basic authorization: basicAuth
+        HttpBasicAuth basicAuth = (HttpBasicAuth) defaultClient.getAuthentication("basicAuth");
+        basicAuth.setUsername("YOUR USERNAME");
+        basicAuth.setPassword("YOUR PASSWORD");
+
+        // Create an instance of the API class
+        ManagementApi apiInstance = new ManagementApi();
+        RenameWorkspaceRequest renameWorkspaceRequest = ; // RenameWorkspaceRequest | 
+
+        try {
+            RenameResponse result = apiInstance.renameWorkspace(renameWorkspaceRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling ManagementApi#renameWorkspace");
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Management-renameWorkspace-0-dart">
+                            <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
+
+final api_instance = DefaultApi();
+
+final RenameWorkspaceRequest renameWorkspaceRequest = new RenameWorkspaceRequest(); // RenameWorkspaceRequest | 
+
+try {
+    final result = await api_instance.renameWorkspace(renameWorkspaceRequest);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->renameWorkspace: $e\n');
+}
+
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Management-renameWorkspace-0-android">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.ManagementApi;
+
+public class ManagementApiExample {
+    public static void main(String[] args) {
+        ManagementApi apiInstance = new ManagementApi();
+        RenameWorkspaceRequest renameWorkspaceRequest = ; // RenameWorkspaceRequest | 
+
+        try {
+            RenameResponse result = apiInstance.renameWorkspace(renameWorkspaceRequest);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling ManagementApi#renameWorkspace");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Management-renameWorkspace-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Management-renameWorkspace-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+// Configure HTTP basic authorization (authentication scheme: basicAuth)
+[apiConfig setUsername:@"YOUR_USERNAME"];
+[apiConfig setPassword:@"YOUR_PASSWORD"];
+
+// Create an instance of the API class
+ManagementApi *apiInstance = [[ManagementApi alloc] init];
+RenameWorkspaceRequest *renameWorkspaceRequest = ; // 
+
+[apiInstance renameWorkspaceWith:renameWorkspaceRequest
+              completionHandler: ^(RenameResponse output, NSError* error) {
+    if (output) {
+        NSLog(@"%@", output);
+    }
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+}];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Management-renameWorkspace-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var GeoServerAcl = require('geo_server_acl');
+var defaultClient = GeoServerAcl.ApiClient.instance;
+
+// Configure HTTP basic authorization: basicAuth
+var basicAuth = defaultClient.authentications['basicAuth'];
+basicAuth.username = 'YOUR USERNAME';
+basicAuth.password = 'YOUR PASSWORD';
+
+// Create an instance of the API class
+var api = new GeoServerAcl.ManagementApi()
+var renameWorkspaceRequest = ; // {RenameWorkspaceRequest} 
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.renameWorkspace(renameWorkspaceRequest, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Management-renameWorkspace-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Management-renameWorkspace-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using Org.OpenAPITools.Api;
+using Org.OpenAPITools.Client;
+using Org.OpenAPITools.Model;
+
+namespace Example
+{
+    public class renameWorkspaceExample
+    {
+        public void main()
+        {
+            // Configure HTTP basic authorization: basicAuth
+            Configuration.Default.Username = "YOUR_USERNAME";
+            Configuration.Default.Password = "YOUR_PASSWORD";
+
+            // Create an instance of the API class
+            var apiInstance = new ManagementApi();
+            var renameWorkspaceRequest = new RenameWorkspaceRequest(); // RenameWorkspaceRequest | 
+
+            try {
+                RenameResponse result = apiInstance.renameWorkspace(renameWorkspaceRequest);
+                Debug.WriteLine(result);
+            } catch (Exception e) {
+                Debug.Print("Exception when calling ManagementApi.renameWorkspace: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Management-renameWorkspace-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+// Configure HTTP basic authorization: basicAuth
+OpenAPITools\Client\Configuration::getDefaultConfiguration()->setUsername('YOUR_USERNAME');
+OpenAPITools\Client\Configuration::getDefaultConfiguration()->setPassword('YOUR_PASSWORD');
+
+// Create an instance of the API class
+$api_instance = new OpenAPITools\Client\Api\ManagementApi();
+$renameWorkspaceRequest = ; // RenameWorkspaceRequest | 
+
+try {
+    $result = $api_instance->renameWorkspace($renameWorkspaceRequest);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling ManagementApi->renameWorkspace: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Management-renameWorkspace-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::OPenAPIClient::Configuration;
+use WWW::OPenAPIClient::ManagementApi;
+# Configure HTTP basic authorization: basicAuth
+$WWW::OPenAPIClient::Configuration::username = 'YOUR_USERNAME';
+$WWW::OPenAPIClient::Configuration::password = 'YOUR_PASSWORD';
+
+# Create an instance of the API class
+my $api_instance = WWW::OPenAPIClient::ManagementApi->new();
+my $renameWorkspaceRequest = WWW::OPenAPIClient::Object::RenameWorkspaceRequest->new(); # RenameWorkspaceRequest | 
+
+eval {
+    my $result = $api_instance->renameWorkspace(renameWorkspaceRequest => $renameWorkspaceRequest);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling ManagementApi->renameWorkspace: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Management-renameWorkspace-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import openapi_client
+from openapi_client.rest import ApiException
+from pprint import pprint
+# Configure HTTP basic authorization: basicAuth
+openapi_client.configuration.username = 'YOUR_USERNAME'
+openapi_client.configuration.password = 'YOUR_PASSWORD'
+
+# Create an instance of the API class
+api_instance = openapi_client.ManagementApi()
+renameWorkspaceRequest =  # RenameWorkspaceRequest | 
+
+try:
+    api_response = api_instance.rename_workspace(renameWorkspaceRequest)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling ManagementApi->renameWorkspace: %s\n" % e)</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Management-renameWorkspace-0-rust">
+                              <pre class="prettyprint"><code class="language-rust">extern crate ManagementApi;
+
+pub fn main() {
+    let renameWorkspaceRequest = ; // RenameWorkspaceRequest
+
+    let mut context = ManagementApi::Context::default();
+    let result = client.renameWorkspace(renameWorkspaceRequest, &context).wait();
+
+    println!("{:?}", result);
+}
+</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Scopes</h2>
+                          <table>
+                            
+                          </table>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">renameWorkspaceRequest <span style="color:red;">*</span></td>
+<td>
+<p class="marked"></p>
+<script>
+$(document).ready(function() {
+  var schemaWrapper = {
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/RenameWorkspaceRequest"
+      }
+    },
+    "application/x-jackson-smile" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/RenameWorkspaceRequest"
+      }
+    }
+  },
+  "required" : true
+};
+
+  var schema = findNode('schema',schemaWrapper).schema;
+  if (!schema) {
+    schema = schemaWrapper.schema;
+  }
+  if (schema.$ref != null) {
+    schema = defsParser.$refs.get(schema.$ref);
+  } else {
+    schemaWrapper.definitions = Object.assign({}, defs);
+    $RefParser.dereference(schemaWrapper).catch(function(err) {
+      console.log(err);
+    });
+  }
+
+  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+  var result = $('#d2e199_renameWorkspace_renameWorkspaceRequest');
+  result.empty();
+  result.append(view.render());
+});
+</script>
+<div id="d2e199_renameWorkspace_renameWorkspaceRequest"></div>
+</td>
+</tr>
+
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3 id="examples-Management-renameWorkspace-title-200"></h3>
+                            <p id="examples-Management-renameWorkspace-description-200" class="marked"></p>
+                            <script>
+                              var responseManagement200_description = `List of data and/or admin rule ids affeted by the execution of a RenameWorkspaceRequest or RenameLayerRequest`;
+                              var responseManagement200_description_break = responseManagement200_description.indexOf('\n');
+                              if (responseManagement200_description_break == -1) {
+                                $("#examples-Management-renameWorkspace-title-200").text("Status: 200 - " + responseManagement200_description);
+                              } else {
+                                $("#examples-Management-renameWorkspace-title-200").text("Status: 200 - " + responseManagement200_description.substring(0, responseManagement200_description_break));
+                                $("#examples-Management-renameWorkspace-description-200").html(responseManagement200_description.substring(responseManagement200_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Management-renameWorkspace-200" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Management-renameWorkspace-200-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Management-renameWorkspace-200-wrapper" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-Management-renameWorkspace-200-schema">
+                                  <div id="responses-Management-renameWorkspace-schema-200" class="exampleStyle">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = ;
+                                        var schema = findNode('schema',schemaWrapper).schema;
+                                        if (!schema) {
+                                          schema = schemaWrapper.schema;
+                                        }
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        } else if (schema.items != null && schema.items.$ref != null) {
+                                            schema.items = defsParser.$refs.get(schema.items.$ref);
+                                        } else {
+                                          schemaWrapper.definitions = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-Management-renameWorkspace-200-schema-data').val(JSON.stringify(schema));
+                                        var result = $('#responses-Management-renameWorkspace-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-Management-renameWorkspace-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+                            <h3 id="examples-Management-renameWorkspace-title-400"></h3>
+                            <p id="examples-Management-renameWorkspace-description-400" class="marked"></p>
+                            <script>
+                              var responseManagement400_description = `Bad request body, for example providing `null` on either the old or new workspace name`;
+                              var responseManagement400_description_break = responseManagement400_description.indexOf('\n');
+                              if (responseManagement400_description_break == -1) {
+                                $("#examples-Management-renameWorkspace-title-400").text("Status: 400 - " + responseManagement400_description);
+                              } else {
+                                $("#examples-Management-renameWorkspace-title-400").text("Status: 400 - " + responseManagement400_description.substring(0, responseManagement400_description_break));
+                                $("#examples-Management-renameWorkspace-description-400").html(responseManagement400_description.substring(responseManagement400_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Management-renameWorkspace-400" class="nav nav-tabs nav-tabs-examples" >
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Management-renameWorkspace-400-wrapper" style='margin-bottom: 10px;'>
+                            </div>
+                            <h3 id="examples-Management-renameWorkspace-title-409"></h3>
+                            <p id="examples-Management-renameWorkspace-description-409" class="marked"></p>
+                            <script>
+                              var responseManagement409_description = `A Rule with the same target identifier already exists (i.e. with the same values for username, rolename, service, request, subfield, workspace, layer, and addressRange)`;
+                              var responseManagement409_description_break = responseManagement409_description.indexOf('\n');
+                              if (responseManagement409_description_break == -1) {
+                                $("#examples-Management-renameWorkspace-title-409").text("Status: 409 - " + responseManagement409_description);
+                              } else {
+                                $("#examples-Management-renameWorkspace-title-409").text("Status: 409 - " + responseManagement409_description.substring(0, responseManagement409_description_break));
+                                $("#examples-Management-renameWorkspace-description-409").html(responseManagement409_description.substring(responseManagement409_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Management-renameWorkspace-409" class="nav nav-tabs nav-tabs-examples" >
+
+                                <li class="">
+                                  <a data-toggle="tab" href="#responses-renameWorkspace-409-headers">Headers</a>
+                                </li>
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Management-renameWorkspace-409-wrapper" style='margin-bottom: 10px;'>
+                                  <div class="tab-pane" id="responses-renameWorkspace-409-headers">
+                                      <table>
+                                          <tr>
+                                              <th width="150px">Name</th>
+                                              <th width="100px">Type</th>
+                                              <th width="100px">Format</th>
+                                              <th>Description</th>
+                                          </tr>
+                                              <tr>
+                                                  <td>XMinusReason</td>
+                                                  <td>String</td>
+                                                  <td></td>
+                                                  <td></td>
+                                              </tr>
+                                      </table>
+                                  </div>
                             </div>
                         </article>
                       </div>
