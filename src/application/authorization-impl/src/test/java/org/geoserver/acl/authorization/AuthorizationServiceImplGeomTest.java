@@ -14,7 +14,8 @@ import org.geoserver.acl.domain.rules.RuleAdminServiceImpl;
 /**
  * {@link AuthorizationService} integration/conformance test working with geometries
  *
- * <p>Concrete implementations must supply the required services in {@link ServiceTestBase}
+ * <p>Concrete implementations must supply the required services in {@link
+ * BaseAuthorizationServiceTest}
  */
 class AuthorizationServiceImplGeomTest extends AuthorizationServiceGeomTest {
 

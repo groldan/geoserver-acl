@@ -12,6 +12,8 @@ import org.geoserver.acl.api.client.AuthorizationApi;
 import org.geoserver.acl.api.mapper.AuthorizationModelApiMapper;
 import org.geoserver.acl.api.mapper.RuleApiMapper;
 import org.geoserver.acl.authorization.AccessInfo;
+import org.geoserver.acl.authorization.AccessSummary;
+import org.geoserver.acl.authorization.AccessSummaryRequest;
 import org.geoserver.acl.authorization.AdminAccessInfo;
 import org.geoserver.acl.authorization.AuthorizationService;
 import org.geoserver.acl.domain.rules.Rule;
@@ -73,5 +75,10 @@ public class AuthorizationServiceClientAdaptor implements AuthorizationService {
             log.error("Error getting matching rules for {}", request, e);
             throw e;
         }
+    }
+
+    @Override
+    public AccessSummary getUserAccessSummary(AccessSummaryRequest request) {
+        throw new UnsupportedOperationException("implement");
     }
 }

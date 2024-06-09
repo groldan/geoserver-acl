@@ -6,6 +6,10 @@
  */
 package org.geoserver.acl.plugin.accessmanager;
 
+import static org.geoserver.acl.domain.rules.GrantType.ALLOW;
+import static org.geoserver.acl.domain.rules.GrantType.DENY;
+import static org.geoserver.acl.domain.rules.GrantType.LIMIT;
+
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 
@@ -14,8 +18,8 @@ import com.google.common.base.Stopwatch;
 import org.apache.commons.collections4.CollectionUtils;
 import org.geoserver.acl.authorization.AccessInfo;
 import org.geoserver.acl.authorization.AccessRequest;
-import org.geoserver.acl.authorization.AdminAccessInfo;
-import org.geoserver.acl.authorization.AdminAccessRequest;
+import org.geoserver.acl.authorization.AccessSummary;
+import org.geoserver.acl.authorization.AccessSummaryRequest;
 import org.geoserver.acl.authorization.AuthorizationService;
 import org.geoserver.acl.domain.rules.GrantType;
 import org.geoserver.acl.domain.rules.LayerAttribute;
@@ -77,6 +81,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * {@link ResourceAccessManager} to make GeoServer use the ACL {@link AuthorizationService} to
@@ -119,39 +125,33 @@ public class ACLResourceAccessManager extends AbstractResourceAccessManager
         this.wpsHelper = wpsHelper;
     }
 
-    public AccessManagerConfig getConfig() {
-        return this.configProvider.get();
+    @Override
+    public int getPriority() {
+        return ExtensionPriority.LOWEST;
     }
 
-    static boolean isAuthenticated(Authentication user) {
-        return (user != null) && !(user instanceof AnonymousAuthenticationToken);
-    }
-
-    static boolean isAdmin(Authentication user) {
-        if (isAuthenticated(user)) {
-            return user.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .anyMatch(GeoServerRole.ADMIN_ROLE.getAuthority()::equals);
+    @Override
+    public Filter getSecurityFilter(Authentication user, Class<? extends CatalogInfo> clazz) {
+        if (isAdmin(user)) {
+            return Filter.INCLUDE;
         }
-        return false;
+        AccessSummary viewables = findViewables(user);
+        return new CatalogSecurityFilterBuilder(viewables).build(clazz);
     }
 
+    /** Mainly used by WorkspaceAdminComponentAuthorizer */
     @Override
     public WorkspaceAccessLimits getAccessLimits(Authentication user, WorkspaceInfo workspace) {
         CatalogMode catalogMode = DEFAULT_CATALOG_MODE;
         boolean canRead;
         boolean canWrite;
         boolean canAdmin;
-        if (isAuthenticated(user)) {
-            // shortcut, if the user is the admin, he can do everything
-            if (isAdmin(user)) {
-                canRead = canWrite = canAdmin = true;
-            } else {
-                canRead = true;
-                canWrite = configProvider.get().isGrantWriteToWorkspacesToAuthenticatedUsers();
-                String workspaceName = workspace.getName();
-                canAdmin = isWorkspaceAdmin(user, workspaceName);
-            }
+        if (isAdmin(user)) {
+            canRead = canWrite = canAdmin = true;
+        } else if (isAuthenticated(user)) {
+            canRead = true;
+            canWrite = configProvider.get().isGrantWriteToWorkspacesToAuthenticatedUsers();
+            canAdmin = isWorkspaceAdmin(user, workspace);
         } else {
             // further logic disabled because of
             // https://github.com/geosolutions-it/geofence/issues/6 (gone)
@@ -162,30 +162,17 @@ public class ACLResourceAccessManager extends AbstractResourceAccessManager
         return new WorkspaceAccessLimits(catalogMode, canRead, canWrite, canAdmin);
     }
 
+    // @Override
+    public boolean isWorkspaceAdmin(Authentication user) {
+        AccessSummary accessSumary = findViewables(user);
+        return accessSumary.hasAdminRightsToAnyWorkspace();
+    }
+
     /** We expect the user not to be null and not to be admin */
-    private boolean isWorkspaceAdmin(Authentication user, String workspaceName) {
-        log(
-                FINE,
-                "Getting admin auth for user {0} on workspace {1}",
-                user.getName(),
-                workspaceName);
-
-        AdminAccessRequest request =
-                new AdminAccessRequestBuilder(configProvider.get())
-                        .user(user)
-                        .workspace(workspaceName)
-                        .build();
-
-        AdminAccessInfo grant = aclService.getAdminAuthorization(request);
-
-        log(
-                FINE,
-                "Admin auth for user {0} on workspace {1}: {2}",
-                user.getName(),
-                workspaceName,
-                grant.isAdmin());
-
-        return grant.isAdmin();
+    private boolean isWorkspaceAdmin(Authentication user, WorkspaceInfo workspace) {
+        String workspaceName = workspace.getName();
+        AccessSummary accessSummary = findViewables(user);
+        return accessSummary.hasAdminWriteAccess(workspaceName);
     }
 
     @Override
@@ -201,13 +188,13 @@ public class ACLResourceAccessManager extends AbstractResourceAccessManager
 
     @Override
     public DataAccessLimits getAccessLimits(Authentication user, LayerInfo layer) {
-        log(Level.FINE, "Getting access limits for Layer {0}", layer.getName());
+        log(FINE, "Getting access limits for Layer {0}", layer.getName());
         return getAccessLimits(user, layer, Collections.emptyList());
     }
 
     @Override
     public DataAccessLimits getAccessLimits(Authentication user, ResourceInfo resource) {
-        log(Level.FINE, "Getting access limits for Resource {0}", resource.getName());
+        log(FINE, "Getting access limits for Resource {0}", resource.getName());
         // extract the user name
         String workspace = resource.getStore().getWorkspace().getName();
         String layer = resource.getName();
@@ -231,6 +218,25 @@ public class ACLResourceAccessManager extends AbstractResourceAccessManager
         String layer = layerGroup.getName();
         return (LayerGroupAccessLimits)
                 getAccessLimits(user, layerGroup, layer, workspace, containers);
+    }
+
+    public AccessManagerConfig getConfig() {
+        return this.configProvider.get();
+    }
+
+    static boolean isAuthenticated(Authentication user) {
+        return (user != null) && !(user instanceof AnonymousAuthenticationToken);
+    }
+
+    static boolean isAdmin(Authentication user) {
+        if (isAuthenticated(user)) {
+            return roles(user).anyMatch(GeoServerRole.ADMIN_ROLE.getAuthority()::equals);
+        }
+        return false;
+    }
+
+    static Stream<String> roles(Authentication user) {
+        return user.getAuthorities().stream().map(GrantedAuthority::getAuthority);
     }
 
     private AccessLimits getAccessLimits(
@@ -263,7 +269,7 @@ public class ACLResourceAccessManager extends AbstractResourceAccessManager
                 boolean noneSingle = noneSingle(summaries);
                 // all opaque we deny and don't perform any resolution of group limits.
                 if (allOpaque) {
-                    accessInfo = accessInfo.withGrant(GrantType.DENY);
+                    accessInfo = accessInfo.withGrant(DENY);
                 } else if (noneSingle) {
                     // if a single group is present we don't apply any limit from containers.
                     processingResult =
@@ -272,8 +278,8 @@ public class ACLResourceAccessManager extends AbstractResourceAccessManager
                 }
             }
         } else if (layerGroupsRequested) {
-            // layer is requested in context of a layer group, we need to process the containers
-            // limits.
+            // layer is requested in context of a layer group, we need to process the
+            // containers limits.
             processingResult =
                     getContainerResolverResult(info, layer, workspace, user, containers, List.of());
         }
@@ -545,7 +551,7 @@ public class ACLResourceAccessManager extends AbstractResourceAccessManager
                         "Invalid cql filter found: " + e.getMessage(), e);
             }
         }
-        boolean includeFilter = actualGrant == GrantType.ALLOW || actualGrant == GrantType.LIMIT;
+        boolean includeFilter = actualGrant == ALLOW || actualGrant == LIMIT;
         return includeFilter ? Filter.INCLUDE : Filter.EXCLUDE;
     }
 
@@ -557,7 +563,7 @@ public class ACLResourceAccessManager extends AbstractResourceAccessManager
         GrantType grant = accessInfo.getGrant();
         // the SecureCatalog will grant access to the layerGroup
         // if AccessLimits are null
-        if (grant.equals(GrantType.ALLOW) || grant.equals(GrantType.LIMIT)) {
+        if (grant.equals(ALLOW) || grant.equals(LIMIT)) {
             return null; // null == no-limits
         }
         CatalogMode catalogMode = convert(accessInfo.getCatalogMode());
@@ -687,14 +693,12 @@ public class ACLResourceAccessManager extends AbstractResourceAccessManager
         return result;
     }
 
-    @Override
-    public Filter getSecurityFilter(Authentication user, Class<? extends CatalogInfo> clazz) {
-        // resort to the in-process filter until we can provide a faster alternative
-        return super.getSecurityFilter(user, clazz);
-    }
+    AccessSummary findViewables(Authentication user) {
+        String username = user.getName();
+        Set<String> roles = roles(user).collect(Collectors.toSet());
+        AccessSummaryRequest request =
+                AccessSummaryRequest.builder().user(username).roles(roles).build();
 
-    @Override
-    public int getPriority() {
-        return ExtensionPriority.LOWEST;
+        return aclService.getUserAccessSummary(request);
     }
 }

@@ -36,6 +36,8 @@ public interface AuthorizationService {
      */
     AdminAccessInfo getAdminAuthorization(AdminAccessRequest request);
 
+    AccessSummary getUserAccessSummary(AccessSummaryRequest request);
+
     /**
      * Return the unprocessed {@link Rule} list matching a given filter, sorted by priority.
      *
