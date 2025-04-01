@@ -1,0 +1,175 @@
+---
+layout: default
+title: Introduction and Goals
+parent: Technical Documentation
+nav_order: 1
+---
+= Introduction and Goals
+:imagesdir: images
+:toc: left
+:sectnums:
+
+== Overview
+
+GeoServer ACL is an advanced authorization system for https://geoserver.org/[GeoServer] that enables fine-grained access control to geospatial data and services.
+
+The system consists of two main components:
+
+* An independent application service that manages access rules
+* A GeoServer plugin that enforces these rules on a per-request basis
+
+== Requirements Overview
+
+=== Essential Features
+
+[cols="1,2,4"]
+|===
+|ID |Feature |Description
+
+|F-1
+|Fine-grained Access Control
+|Control access to spatial data at multiple levels: workspace, layer, feature type, feature attributes, and geographic areas
+
+|F-2
+|Rule-based Authorization
+|Define rules with priorities that determine access based on user identity, role, service, request type, and resource
+
+|F-3
+|GeoServer Integration
+|Seamless integration with GeoServer to enforce access rules for OGC service requests
+
+|F-4
+|Spatial Filtering
+|Ability to restrict data access based on geographic boundaries
+
+|F-5
+|Attribute Filtering
+|Control which feature attributes users can access
+
+|F-6
+|Authentication Integration
+|Work with any authentication system GeoServer supports (Basic auth, OAuth2, etc.)
+
+|F-7
+|Performance Optimization
+|Efficient rule matching and caching for minimal impact on request processing
+|===
+
+=== Nice-to-Have Features
+
+[cols="1,2,4"]
+|===
+|ID |Feature |Description
+
+|F-8
+|Admin UI Integration
+|Web interface integrated with GeoServer for rule management
+
+|F-9
+|REST API
+|Programmatic access to rule management
+
+|F-10
+|Bulk Import/Export
+|Ability to import and export rule sets
+
+|F-11
+|Audit Logging
+|Track rule changes and authorization decisions
+
+|F-12
+|Multi-instance Support
+|Support for clustered GeoServer deployments
+|===
+
+== Quality Goals
+
+[cols="1,2,4a"]
+|===
+|Priority |Quality |Motivation
+
+|1
+|Security
+|As an authorization system, security is paramount. The system must:
+
+* Provide reliable enforcement of access rules
+* Prevent unauthorized access to resources
+* Handle edge cases gracefully with secure defaults
+* Follow the principle of least privilege
+
+|2
+|Performance
+|Authorization checks happen on every GeoServer request and must not significantly degrade performance:
+
+* Fast rule evaluation
+* Efficient caching
+* Minimal overhead for common request patterns
+
+|3
+|Reliability
+|The system must be reliable in production environments:
+
+* Consistent behavior
+* Error resistance
+* Correct handling of complex rule sets
+* No false positives or negatives in access control
+
+|4
+|Usability
+|Administrators must be able to effectively manage access rules:
+
+* Intuitive rule definitions
+* Clear documentation
+* Predictable rule evaluation
+* Understandable error messages
+
+|5
+|Maintainability
+|The codebase should be maintainable over time:
+
+* Clean architecture
+* Good separation of concerns
+* Comprehensive test coverage
+* Consistent coding style
+|===
+
+== Stakeholders
+
+[cols="1,2,3,4"]
+|===
+|Role |Representative |Expectations |Contributions
+
+|GeoServer Administrators
+|Various organizations
+|* Easy rule management
+* Predictable behavior
+* Good performance
+* Reliable security
+|* Feature requests
+* Use case definitions
+* Testing in production environments
+
+|GeoServer Developers
+|GeoServer PSC
+|* Clean integration
+* Compatible with GeoServer release cycles
+* Minimal maintenance burden
+|* Integration guidance
+* Code review
+* Release coordination
+
+|End Users
+|Various
+|* Transparent operation
+* No performance degradation
+* Appropriate access to data
+|* Indirect feedback through administrators
+
+|Organization Security Officers
+|Various
+|* Compliance with security policies
+* Audit capabilities
+* No security vulnerabilities
+|* Security requirements
+* Compliance verification
+|===

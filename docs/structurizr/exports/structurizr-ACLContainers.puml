@@ -1,0 +1,24 @@
+@startuml
+set separator none
+title Container diagram for GeoServer ACL
+
+top to bottom direction
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+
+System(GeoServer, "GeoServer", $descr="OGC-compliant server for sharing geospatial data", $tags="", $link="")
+
+System_Boundary("GeoServerACL_boundary", "GeoServer ACL", $tags="") {
+  Container(GeoServerACL.ACLService, "ACL Service", $techn="", $descr="Manages access rules and provides authorization decisions", $tags="", $link="")
+  Container(GeoServerACL.ACLDatabase, "ACL Database", $techn="", $descr="Stores access rules and administrative rules", $tags="", $link="")
+  Container(GeoServerACL.ACLRESTAPI, "ACL REST API", $techn="", $descr="REST API for managing rules and authorization checks", $tags="", $link="")
+}
+
+Rel(GeoServerACL.ACLRESTAPI, GeoServerACL.ACLService, "Forwards requests to", $techn="", $tags="", $link="")
+Rel(GeoServerACL.ACLService, GeoServerACL.ACLDatabase, "Reads from and writes to", $techn="", $tags="", $link="")
+Rel(GeoServer, GeoServerACL.ACLRESTAPI, "Makes API calls to", $techn="", $tags="", $link="")
+
+SHOW_LEGEND(true)
+@enduml

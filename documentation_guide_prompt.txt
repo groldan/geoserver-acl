@@ -1,0 +1,672 @@
+# Comprehensive Documentation Guide Prompt
+
+This prompt guides you through creating high-quality technical documentation for a software project using MkDocs, Material theme, and Structurizr diagrams, following best practices established in the geOrchestra Gateway project.
+
+## Phase 1: Understanding the Project
+
+First, analyze the project thoroughly to understand its architecture, components, and purpose:
+
+1. Examine the project structure, focusing on:
+   - Core modules and their relationships
+   - Main functionalities and features
+   - Technology stack and dependencies
+   - API interfaces and integration points
+
+2. Review existing documentation:
+   - READMEs and existing docs
+   - Code comments, especially in key interfaces
+   - Issues or discussions related to documentation
+   - Architecture diagrams or design notes
+
+3. Identify target audiences:
+   - End users
+   - System administrators
+   - Developers
+   - Project contributors
+
+## Phase 2: Setting Up MkDocs Infrastructure
+
+Create a modern documentation system using MkDocs with the Material theme:
+
+1. Set up basic MkDocs configuration:
+```yaml
+site_name: Your Project Documentation
+site_description: Documentation for Your Project
+site_author: Your Organization
+copyright: "&copy; 2023-2025 Your Organization"
+repo_url: https://github.com/yourorg/yourproject
+edit_uri: edit/main/docs/
+site_url: https://docs.yourorg.org/
+
+theme:
+  name: material
+  logo: assets/images/your-logo.svg
+  favicon: assets/images/favicon.ico
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Inter
+    code: Roboto Mono
+  custom_dir: docs/overrides
+  icon:
+    repo: fontawesome/brands/github
+  
+extra_css:
+  - assets/stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: \!\!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+```
+
+2. Create script for diagram generation (structurizr-generate-diagrams.sh):
+```bash
+#\!/bin/bash
+
+# Check if structurizr-cli is available
+if \! command -v structurizr-cli &> /dev/null; then
+    echo "structurizr-cli is required but not installed. Please install it first."
+    echo "See: https://github.com/structurizr/cli"
+    exit 1
+fi
+
+# Base directory
+BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+WORKSPACE_FILE="$BASE_DIR/workspace.dsl"
+DYNAMIC_VIEWS_FILE="$BASE_DIR/dynamic-views.dsl"
+OUTPUT_DIR="$BASE_DIR/../assets/images/structurizr"
+
+# Create output directory if it doesn't exist
+mkdir -p "$OUTPUT_DIR"
+
+# Generate SVG diagrams from workspace.dsl
+echo "Generating diagrams from workspace.dsl..."
+structurizr-cli export -workspace "$WORKSPACE_FILE" -format plantuml -output "$OUTPUT_DIR"
+
+# Generate SVG diagrams from dynamic-views.dsl if it exists
+if [ -f "$DYNAMIC_VIEWS_FILE" ]; then
+    echo "Generating diagrams from dynamic-views.dsl..."
+    structurizr-cli export -workspace "$DYNAMIC_VIEWS_FILE" -format plantuml -output "$OUTPUT_DIR"
+fi
+
+# Convert PlantUML files to SVG
+echo "Converting PlantUML to SVG..."
+"$BASE_DIR/plantuml-generate-svg.sh"
+
+echo "Diagram generation complete\!"
+```
+
+3. Create script for PlantUML conversion (plantuml-generate-svg.sh):
+```bash
+#\!/bin/bash
+
+# Check if plantuml is available
+if \! command -v plantuml &> /dev/null; then
+    echo "plantuml is required but not installed. Please install it first."
+    echo "See: https://plantuml.com/starting"
+    exit 1
+fi
+
+# Base directory
+BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+OUTPUT_DIR="$BASE_DIR/../assets/images/structurizr"
+
+# Find all .puml files and convert to SVG
+echo "Converting PlantUML files to SVG..."
+for puml_file in "$OUTPUT_DIR"/*.puml; do
+    if [ -f "$puml_file" ]; then
+        echo "Converting $puml_file..."
+        plantuml -tsvg "$puml_file"
+    fi
+done
+
+echo "PlantUML to SVG conversion complete\!"
+```
+
+4. Add GitHub workflow for automatic build (.github/workflows/docs.yml):
+```yaml
+name: Build and Deploy Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '.github/workflows/docs.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install mkdocs mkdocs-material
+
+      - name: Install Structurizr CLI
+        run: |
+          mkdir -p $HOME/bin
+          wget https://github.com/structurizr/cli/releases/download/v1.35.0/structurizr-cli-1.35.0.zip
+          unzip structurizr-cli-1.35.0.zip -d $HOME/bin
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Install PlantUML
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y plantuml
+
+      - name: Generate diagrams
+        run: |
+          cd docs/structurizr
+          chmod +x *.sh
+          ./generate-diagrams.sh
+
+      - name: Build MkDocs
+        run: mkdocs build
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: site
+```
+
+## Phase 3: Creating Documentation Structure
+
+Organize documentation into a clear, audience-targeted structure:
+
+1. Basic directory structure:
+```
+docs/
+├── index.md                   # Main landing page
+├── user_guide/                # For end users
+│   ├── index.md
+│   ├── installation.md
+│   ├── configuration.md
+│   ├── usage.md
+│   └── troubleshooting.md
+├── admin_guide/               # For system administrators
+│   ├── index.md
+│   ├── deployment.md
+│   ├── monitoring.md
+│   └── maintenance.md
+├── developer_guide/           # For developers
+│   ├── index.md
+│   ├── building.md
+│   ├── architecture.md
+│   ├── code_style.md
+│   ├── testing.md
+│   └── contributing.md
+├── arc42/                     # Technical architecture docs
+│   ├── index.md
+│   ├── introduction.md
+│   ├── context_view.md
+│   ├── container_view.md
+│   ├── component_view.md
+│   ├── runtime_view.md
+│   ├── deployment_view.md
+│   ├── crosscutting.md
+│   ├── quality_requirements.md
+│   ├── risks.md
+│   └── glossary.md
+├── api/                       # API documentation
+│   ├── index.md
+│   ├── endpoints.md
+│   └── examples.md
+├── structurizr/               # Architecture diagrams
+│   ├── workspace.dsl
+│   ├── dynamic-views.dsl
+│   └── generate-diagrams.sh
+└── assets/                    # Static assets
+    ├── images/
+    │   ├── logo.svg
+    │   └── structurizr/      # Generated diagrams
+    └── stylesheets/
+        └── extra.css
+```
+
+2. Create necessary index files with clear navigation structure
+
+3. Design the navigation in mkdocs.yml:
+```yaml
+nav:
+  - Home: index.md
+  - User Guide:
+    - user_guide/index.md
+    - Installation: user_guide/installation.md
+    - Configuration: user_guide/configuration.md
+    - Usage: user_guide/usage.md
+    - Troubleshooting: user_guide/troubleshooting.md
+  - Administrator Guide:
+    - admin_guide/index.md
+    - Deployment: admin_guide/deployment.md
+    - Monitoring: admin_guide/monitoring.md
+    - Maintenance: admin_guide/maintenance.md
+  - Developer Guide:
+    - developer_guide/index.md
+    - Building: developer_guide/building.md
+    - Architecture: developer_guide/architecture.md
+    - Code Style: developer_guide/code_style.md
+    - Testing: developer_guide/testing.md
+    - Contributing: developer_guide/contributing.md
+  - Technical Documentation:
+    - arc42/index.md
+    - Introduction: arc42/introduction.md
+    - Context View: arc42/context_view.md
+    - Container View: arc42/container_view.md
+    - Component View: arc42/component_view.md
+    - Runtime View: arc42/runtime_view.md
+    - Deployment View: arc42/deployment_view.md
+    - Crosscutting Concerns: arc42/crosscutting.md
+    - Quality Requirements: arc42/quality_requirements.md
+    - Risks: arc42/risks.md
+    - Glossary: arc42/glossary.md
+  - API Documentation:
+    - api/index.md
+    - Endpoints: api/endpoints.md
+    - Examples: api/examples.md
+```
+
+## Phase 4: Creating arc42 Technical Documentation
+
+Follow the arc42 template structure for comprehensive technical documentation:
+
+1. Introduction and Goals:
+   - Requirements overview
+   - Quality goals
+   - Stakeholders
+
+2. Architecture Constraints:
+   - Technical constraints
+   - Organizational constraints
+   - Conventions
+
+3. System Context:
+   - Business context
+   - Technical context
+   - External systems and users
+
+4. Solution Strategy:
+   - Technology choices
+   - Top-level decomposition
+   - Architecture decisions
+
+5. Building Block View:
+   - Level 1: System context
+   - Level 2: Container view
+   - Level 3: Component view
+
+6. Runtime View:
+   - Important scenarios
+   - Interactions
+   - Behavioral diagrams
+
+7. Deployment View:
+   - Infrastructure
+   - Mapping of software to hardware
+   - Technical infrastructure
+
+8. Crosscutting Concepts:
+   - Domain concepts
+   - Security concepts
+   - User experience
+   - Concurrency
+
+9. Architecture Decisions:
+   - Key decisions and their justifications
+   - Alternatives considered
+   - Decision outcomes
+
+10. Quality Requirements:
+    - Quality tree
+    - Quality scenarios
+    - Acceptance criteria
+
+11. Risks and Technical Debt:
+    - Known risks
+    - Technical debt
+    - Mitigation plans
+
+12. Glossary:
+    - Domain terminology
+    - Technical terms
+    - Abbreviations
+
+## Phase 5: Creating Architectural Diagrams with Structurizr
+
+Use Structurizr DSL to create clear, consistent diagrams:
+
+1. System Context Diagram (workspace.dsl):
+```
+workspace {
+    model {
+        user = person "User" "A user of the system"
+        system = softwareSystem "Your System" "Description of your system" {
+            tags "YourSystem"
+        }
+        
+        externalSystemA = softwareSystem "External System A" "Description of external system A" {
+            tags "External"
+        }
+        
+        externalSystemB = softwareSystem "External System B" "Description of external system B" {
+            tags "External"
+        }
+        
+        user -> system "Uses"
+        system -> externalSystemA "Fetches data from"
+        system -> externalSystemB "Sends data to"
+    }
+    
+    views {
+        systemContext system "SystemContext" {
+            include *
+            autoLayout
+            title "System Context diagram for Your System"
+            description "Shows the system context of Your System"
+        }
+        
+        styles {
+            element "Person" {
+                shape Person
+                background #08427B
+                color #ffffff
+            }
+            element "YourSystem" {
+                background #1168BD
+                color #ffffff
+            }
+            element "External" {
+                background #999999
+                color #ffffff
+            }
+        }
+        
+        theme default
+    }
+}
+```
+
+2. Container Diagram (workspace.dsl):
+```
+workspace {
+    model {
+        // System context defined above
+        
+        // Container level
+        system {
+            webapp = container "Web Application" "The web application" "Spring Boot" {
+                tags "WebApp"
+            }
+            database = container "Database" "Stores user information" "PostgreSQL" {
+                tags "Database"
+            }
+            api = container "API" "Provides functionality via API" "Spring Boot" {
+                tags "API"
+            }
+            
+            webapp -> api "Makes API calls to"
+            api -> database "Reads from and writes to"
+        }
+        
+        user -> webapp "Uses"
+        api -> externalSystemA "Fetches data from"
+        api -> externalSystemB "Sends data to"
+    }
+    
+    views {
+        // System context view defined above
+        
+        container system "Containers" {
+            include *
+            autoLayout
+            title "Container diagram for Your System"
+            description "Shows the containers that make up Your System"
+        }
+        
+        styles {
+            // Styles defined above
+            
+            element "WebApp" {
+                shape WebBrowser
+            }
+            element "API" {
+                shape Component
+            }
+            element "Database" {
+                shape Cylinder
+            }
+        }
+    }
+}
+```
+
+3. Component Diagram (workspace.dsl):
+```
+workspace {
+    model {
+        // System context and container level defined above
+        
+        // Component level
+        api {
+            controller = component "Controller" "Handles API requests" "Spring REST Controller"
+            service = component "Service" "Implements business logic" "Spring Service"
+            repository = component "Repository" "Handles data access" "Spring Data"
+            
+            controller -> service "Uses"
+            service -> repository "Uses"
+            repository -> database "Reads from and writes to"
+        }
+        
+        webapp -> controller "Makes API calls to"
+    }
+    
+    views {
+        // System context and container views defined above
+        
+        component api "Components" {
+            include *
+            autoLayout
+            title "Component diagram for the API"
+            description "Shows the components within the API"
+        }
+    }
+}
+```
+
+4. Dynamic View Diagrams (dynamic-views.dsl):
+```
+workspace {
+    model {
+        // Import the model from workspace.dsl
+        \!ref user
+        \!ref webapp
+        \!ref controller
+        \!ref service
+        \!ref repository
+        \!ref database
+    }
+    
+    views {
+        dynamic webapp "UserRegistration" {
+            title "User Registration Process"
+            user -> webapp "1. Submits registration form"
+            webapp -> controller "2. Posts registration data"
+            controller -> service "3. Processes registration"
+            service -> repository "4. Saves user data"
+            repository -> database "5. Inserts record"
+            database -> repository "6. Confirms insertion"
+            repository -> service "7. Returns result"
+            service -> controller "8. Returns status"
+            controller -> webapp "9. Returns confirmation"
+            webapp -> user "10. Shows success message"
+            autoLayout
+        }
+        
+        dynamic webapp "UserAuthentication" {
+            title "User Authentication Process"
+            user -> webapp "1. Submits login credentials"
+            webapp -> controller "2. Posts login data"
+            controller -> service "3. Requests verification"
+            service -> repository "4. Queries user record"
+            repository -> database "5. Executes query"
+            database -> repository "6. Returns user data"
+            repository -> service "7. Returns user object"
+            service -> controller "8. Returns authentication result"
+            controller -> webapp "9. Returns session token or error"
+            webapp -> user "10. Shows dashboard or error"
+            autoLayout
+        }
+    }
+}
+```
+
+## Phase 6: Content Creation Guidelines
+
+Follow these guidelines to create consistent, high-quality documentation:
+
+1. General Writing Style:
+   - Use clear, concise language
+   - Write in present tense
+   - Use active voice
+   - Target the appropriate audience for each section
+   - Maintain consistent technical depth (user guide simpler than developer guide)
+   - Always add newlines before lists and code blocks
+
+2. Document Structure:
+   - Start each document with a clear title and brief introduction
+   - Use consistent heading hierarchy (# for title, ## for major sections, etc.)
+   - Include table of contents for longer documents
+   - Provide navigation links to related documents
+
+3. Code Examples:
+   - Use syntax highlighting with appropriate language tags
+   - Keep examples short and focused on the specific concept
+   - Include comments where necessary
+   - Provide context for where the code fits in the larger system
+
+4. Diagrams:
+   - Use Structurizr DSL for architectural diagrams
+   - Use Mermaid for simpler flowcharts and sequence diagrams
+   - Ensure diagrams have clear titles and legends
+   - Keep diagrams focused on illustrating specific concepts
+
+5. Including Configuration Examples:
+   - Provide realistic, complete configuration examples
+   - Explain key configuration parameters
+   - Show both minimal and comprehensive configurations
+   - Highlight security-sensitive settings
+
+## Phase 7: Implementation Workflow
+
+Follow this workflow to implement the documentation:
+
+1. Project Setup:
+   - Set up MkDocs with Material theme
+   - Create directory structure
+   - Configure GitHub workflow
+
+2. Initial Content:
+   - Create landing page
+   - Create section index pages
+   - Outline major documentation sections
+
+3. Technical Documentation:
+   - Implement arc42 structure
+   - Create Structurizr models
+   - Generate architectural diagrams
+
+4. User-Facing Documentation:
+   - Write installation guide
+   - Create configuration reference
+   - Document common workflows
+   - Add troubleshooting section
+
+5. Developer Documentation:
+   - Document code structure
+   - Explain build process
+   - Create contributor guidelines
+   - Document testing procedures
+
+6. Review and Refinement:
+   - Conduct technical accuracy review
+   - Check for consistent style and tone
+   - Verify cross-references and navigation
+   - Test diagram rendering
+
+7. Publication:
+   - Publish to GitHub Pages
+   - Create documentation release notes
+   - Announce documentation availability
+   - Set up process for ongoing maintenance
+
+## Best Practices for Maintenance
+
+1. Keep Documentation Current:
+   - Update docs with each release
+   - Review documentation quarterly
+   - Monitor usage metrics to identify areas for improvement
+   - Encourage community contributions
+
+2. Automation:
+   - Automate diagram generation
+   - Use CI/CD for documentation builds
+   - Link documentation to code where possible
+   - Consider integrating API documentation tools
+
+3. Feedback Mechanisms:
+   - Add "Edit this page" links
+   - Provide contribution guidelines
+   - Monitor GitHub issues for documentation-related items
+   - Conduct occasional user surveys
+
+This comprehensive guide will help you create professional, consistent documentation for your software project, following the same high standards established in the geOrchestra Gateway project.

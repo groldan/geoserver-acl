@@ -1,0 +1,122 @@
+---
+title: "Solution Strategy"
+layout: asciidoc
+collection: technical
+---
+= Solution Strategy
+:imagesdir: images
+:toc: left
+:sectnums:
+
+== Overview
+
+This section outlines the fundamental strategic decisions for GeoServer ACL that guide the architecture and technical approach.
+
+== Architectural Approach
+
+=== Hexagonal Architecture
+
+GeoServer ACL follows a hexagonal architecture (also known as ports and adapters) to achieve a clean separation of concerns and maintain a strong domain model:
+
+* *Core Domain*: Contains the business logic, domain objects, and service interfaces
+* *Ports*: Define interfaces for interacting with the domain
+* *Adapters*: Implement the ports to connect external systems and infrastructure
+
+This architecture allows the core domain to remain isolated from external concerns like database access, API formats, and GeoServer integration details.
+
+=== Domain-Driven Design
+
+The domain model is designed following Domain-Driven Design principles:
+
+* *Bounded Contexts*: Clear boundaries between different parts of the system (rule management, authorization, etc.)
+* *Ubiquitous Language*: Consistent terminology throughout the codebase
+* *Rich Domain Model*: Business logic encapsulated in domain objects
+* *Repository Pattern*: Abstraction for data persistence
+
+=== Microservice-Ready Architecture
+
+While GeoServer ACL can be deployed as a single service, its architecture supports microservice deployment patterns:
+
+* Independent service boundary for the ACL functionality
+* REST API for integration
+* Event-based communication for state changes
+* Stateless operation
+
+== Technology Decisions
+
+=== Java and Spring Boot
+
+* *Java*: Core language for domain implementation
+* *Spring Boot*: Framework for application development
+* *Spring Data*: Simplifies data access and repository implementations
+* *Spring Security*: Handles authentication and authorization for the service
+
+=== Persistence
+
+* *JPA/Hibernate*: ORM for database access
+* *PostgreSQL + PostGIS*: Primary production database with spatial capabilities
+* *H2*: In-memory database for testing
+
+=== API Design
+
+* *OpenAPI 3.0*: For API specification
+* *REST*: Architectural style for APIs
+* *JSON*: Primary data exchange format
+
+=== Integration with GeoServer
+
+* *GeoServer Plugin*: Java implementation of GeoServer's security extension points
+* *Client-Server*: Clear separation between GeoServer and ACL service
+* *Resource Access Manager*: Primary integration point with GeoServer
+
+== Quality Goals
+
+=== Addressing Quality Requirements
+
+[cols="1,3,3"]
+|===
+|Quality Goal |Solution Approach |Rationale
+
+|Security
+|Domain-driven authorization logic with well-defined boundaries
+|Isolates security-critical logic in the domain model
+
+|Performance
+|Multi-level caching strategy
+|Reduces database load and network calls
+
+|Reliability
+|Stateless design with robust error handling
+|Avoids state consistency issues
+
+|Maintainability
+|Clean architecture with strong domain model
+|Makes the codebase easier to understand and modify
+
+|Compatibility
+|API versioning and compatibility layers
+|Ensures smooth upgrades and integrations
+|===
+
+=== Key Architectural Decisions
+
+* *Standalone Service*: Separate service rather than embedded library
+* *REST API*: HTTP-based integration rather than direct Java integration
+* *OpenAPI Generation*: Code generation from OpenAPI specification
+* *JPA Repositories*: Standard data access pattern
+* *Immutable Domain Objects*: Thread-safe and easier to reason about
+
+== Organizational Approach
+
+=== Development Process
+
+* *Continuous Integration*: Automated testing on each commit
+* *Pull Request Workflow*: Code review before merging changes
+* *Semantic Versioning*: Clear versioning strategy
+* *Open Source Development*: Community contributions welcome
+
+=== Testing Strategy
+
+* *Test Pyramid*: Emphasis on unit and integration tests
+* *Integration Testing*: Tests between components and with external systems
+* *End-to-End Testing*: Testing the complete system

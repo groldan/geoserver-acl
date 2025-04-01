@@ -1,0 +1,688 @@
+---
+layout: default
+title: Developer's Guide
+nav_order: 3
+has_children: true
+permalink: /developers-guide/
+---
+= GeoServer ACL Developer's Guide
+:toc: left
+:sectnums:
+:imagesdir: images
+:source-highlighter: highlight.js
+:icons: font
+
+== Introduction
+
+Welcome to the GeoServer ACL Developer's Guide. This document is intended for developers who want to understand, modify, or extend the GeoServer ACL codebase. GeoServer ACL is an authorization system for GeoServer that provides fine-grained access control to geospatial resources.
+
+=== Purpose
+
+This guide aims to:
+
+* Provide an overview of the codebase architecture and organization
+* Explain key design patterns and decisions
+* Guide you through common development tasks
+* Document contribution guidelines and best practices
+
+=== Prerequisites
+
+To work effectively with the GeoServer ACL codebase, you should have:
+
+* Good understanding of Java (Java 11+)
+* Familiarity with Spring Framework and Spring Boot
+* Basic knowledge of GeoServer and OGC services (WMS, WFS, etc.)
+* Understanding of REST API design
+* Experience with Maven build system
+
+== Project Structure
+
+GeoServer ACL is organized as a Maven multi-module project, with clear separation of concerns between modules.
+
+=== Module Overview
+
+[cols="1,4"]
+|===
+|Module |Description
+
+|`domain`
+|Core business logic and domain objects. Contains domain models, service interfaces, and business rules.
+
+|`integration`
+|Integration with external systems. Includes JPA persistence, API implementations, and Spring Boot integration.
+
+|`openapi`
+|OpenAPI specification and generated clients. Defines the REST API contract used for communication.
+
+|`plugin`
+|GeoServer plugin components. Contains the code that integrates with GeoServer's security framework.
+
+|`application`
+|Standalone service application. Packages everything as a deployable Spring Boot service.
+|===
+
+=== Key Directories
+
+[source,bash]
+----
+geoserver-acl/
+├── docs/                 # Documentation
+├── src/                  # Main source code
+│   ├── domain/           # Domain modules
+│   │   ├── adminrule-management/  # Admin rules
+│   │   ├── filter/               # Rule filters
+│   │   └── rule-management/      # Data access rules
+│   ├── integration/              # Integration layers
+│   │   ├── openapi/             # API integration
+│   │   ├── persistence-jpa/     # JPA persistence
+│   │   └── spring/              # Spring integration
+│   ├── openapi/                 # OpenAPI specification
+│   └── plugin/                  # GeoServer plugin
+│       ├── accessmanager/       # Main integration point
+│       ├── client/              # Client adaptor
+│       └── web/                 # Web UI components
+├── pom.xml                # Parent POM
+└── README.md              # Project README
+----
+
+== Core Domain Model
+
+The domain model represents the key concepts in the GeoServer ACL system. Understanding these domain objects is essential for working with the codebase.
+
+=== Rule Models
+
+==== Access Rule
+
+The `Rule` class is the core domain object representing an access control rule:
+
+[source,java]
+----
+@Value.Immutable
+@Value.Style(builder = "builder")
+public interface Rule {
+    String getId();
+    Integer getPriority();
+    GrantType getAccess(); // ALLOW, DENY, LIMIT
+    String getUsername();
+    String getRolename();
+    String getInstance();
+    String getService();
+    String getRequest();
+    String getWorkspace();
+    String getLayer();
+    LayerDetails getLayerDetails();
+    // ...
+}
+----
+
+Key concepts:
+
+* Each rule has a priority (lower numbers = higher priority)
+* Rules specify who they apply to (username/rolename)
+* Rules specify what they apply to (service/request/workspace/layer)
+* Rules have a GrantType (ALLOW, DENY, LIMIT)
+* LIMIT rules have additional LayerDetails with fine-grained permissions
+
+==== Admin Rule
+
+Admin rules control administrative access to GeoServer resources:
+
+[source,java]
+----
+@Value.Immutable
+@Value.Style(builder = "builder")
+public interface AdminRule {
+    String getId();
+    Integer getPriority();
+    String getUsername();
+    String getRolename();
+    String getInstance();
+    String getWorkspace();
+    AdminGrantType getAccess(); // ADMIN, USER, LIMIT, DENY
+    // ...
+}
+----
+
+==== Rule Filters
+
+Rule filters define criteria for querying and matching rules:
+
+[source,java]
+----
+@Value.Immutable
+@Value.Style(builder = "builder")
+public interface RuleFilter {
+    String getUser();
+    String getRole();
+    String getInstance();
+    String getService();
+    String getRequest();
+    String getWorkspace();
+    String getLayer();
+    // ...
+}
+----
+
+=== Immutability Pattern
+
+The domain model uses the Immutable Objects pattern with builders:
+
+* All domain objects are immutable after construction
+* Builder classes are used to create instances
+* Using the Immutables library to generate implementations
+
+Example usage:
+
+[source,java]
+----
+Rule rule = Rule.builder()
+    .priority(100)
+    .access(GrantType.ALLOW)
+    .username("user1")
+    .workspace("workspace1")
+    .layer("layer1")
+    .build();
+----
+
+== Service Layer
+
+The service layer defines the core business logic and operations on the domain model.
+
+=== Key Service Interfaces
+
+==== RuleAdminService
+
+Manages access rules:
+
+[source,java]
+----
+public interface RuleAdminService {
+    // CRUD operations
+    Rule get(String id);
+    Rule insert(Rule rule);
+    Rule update(Rule rule);
+    boolean delete(String id);
+    
+    // Querying operations
+    long count();
+    long count(RuleFilter filter);
+    Stream<Rule> getAll();
+    Stream<Rule> getAll(RuleFilter filter);
+    
+    // Rule management
+    long shift(RuleFilter filter, long offset);
+    void swap(String id1, String id2);
+    // ...
+}
+----
+
+==== AuthorizationService
+
+Core service for authorization decisions:
+
+[source,java]
+----
+public interface AuthorizationService {
+    // Authorization methods
+    AccessInfo getAccessInfo(AccessRequest request);
+    AdminAccessInfo getAdminAuthorization(AdminAccessRequest request);
+    // ...
+}
+----
+
+=== Service Implementations
+
+The service implementations contain the business logic for rule management and authorization:
+
+* `RuleAdminServiceImpl`: Manages rule CRUD and querying
+* `AdminRuleAdminServiceImpl`: Manages admin rule CRUD and querying
+* `AuthorizationServiceImpl`: Core authorization logic
+
+Key patterns:
+
+* Services use repositories for persistence
+* Business logic is encapsulated in the service layer
+* Validation happens in the service layer
+* Transaction boundaries are defined at the service level
+
+== Persistence Layer
+
+The persistence layer handles storage and retrieval of rules using JPA.
+
+=== Repository Interfaces
+
+JPA repositories use Spring Data JPA:
+
+[source,java]
+----
+public interface RuleRepository {
+    Optional<Rule> findById(String id);
+    Rule save(Rule rule);
+    void delete(String id);
+    Stream<Rule> findAll();
+    Stream<Rule> findAll(RuleFilter filter);
+    // ...
+}
+----
+
+=== JPA Implementations
+
+The JPA implementation module provides concrete implementations:
+
+* `JpaRuleRepository`: JPA implementation for access rules
+* `JpaAdminRuleRepository`: JPA implementation for admin rules
+
+Key patterns:
+
+* Entity classes mapped to database tables
+* Repositories use Spring Data JPA
+* Custom query methods for efficient rule lookup
+* Repository adaptors map between domain objects and JPA entities
+
+== REST API
+
+The REST API allows interaction with the system via HTTP endpoints.
+
+=== OpenAPI Specification
+
+The API is defined using OpenAPI 3.0 in `src/openapi/acl-api.yaml`:
+
+[source,yaml]
+----
+paths:
+  /rules:
+    get:
+      summary: Get all rules
+      # ...
+    post:
+      summary: Create a new rule
+      # ...
+  /rules/{id}:
+    get:
+      summary: Get a rule by ID
+      # ...
+    # ...
+  /authorize:
+    post:
+      summary: Get authorization decision
+      # ...
+----
+
+=== API Implementation
+
+The API implementation connects REST endpoints to the service layer:
+
+* Controllers handle HTTP requests and responses
+* DTOs (Data Transfer Objects) for API data structures
+* Mappers convert between DTOs and domain objects
+* Exception handlers translate domain exceptions to HTTP status codes
+
+== GeoServer Plugin
+
+The GeoServer plugin integrates ACL with GeoServer's security framework.
+
+=== ACL Resource Access Manager
+
+The main integration point is the `ACLResourceAccessManager` which implements GeoServer's `ResourceAccessManager` interface:
+
+[source,java]
+----
+public class ACLResourceAccessManager implements ResourceAccessManager {
+    @Override
+    public WorkspaceAccessLimits getAccessLimits(Authentication user, WorkspaceInfo workspace) {
+        // Request workspace access decision from ACL service
+    }
+    
+    @Override
+    public DataAccessLimits getAccessLimits(Authentication user, LayerInfo layer) {
+        // Request layer access decision from ACL service
+    }
+    
+    // Other ResourceAccessManager methods...
+}
+----
+
+=== Client Adaptor
+
+The plugin communicates with the ACL service using a client adaptor:
+
+* Maps between GeoServer objects and ACL domain objects
+* Handles communication with the ACL service
+* Caches authorization results for performance
+* Handles error cases and fallbacks
+
+=== Web UI
+
+The plugin provides a web UI for managing rules within GeoServer:
+
+* Implements GeoServer's Wicket-based admin UI
+* Provides pages for viewing and editing rules
+* Integrates with GeoServer's authentication system
+
+== Development Workflow
+
+=== Setting Up the Development Environment
+
+1. Clone the repository:
++
+[source,bash]
+----
+git clone https://github.com/geoserver/geoserver-acl.git
+cd geoserver-acl
+----
+
+2. Build the project:
++
+[source,bash]
+----
+./mvnw clean install
+----
+
+3. Import the project into your IDE as a Maven project
+
+=== Running Tests
+
+Run unit tests:
+
+[source,bash]
+----
+./mvnw test
+----
+
+Run integration tests:
+
+[source,bash]
+----
+./mvnw verify
+----
+
+=== Running the Application
+
+Run the standalone service:
+
+[source,bash]
+----
+cd src/artifacts/api
+../../../mvnw spring-boot:run
+----
+
+=== Debugging
+
+To debug the service, add remote debugging options:
+
+[source,bash]
+----
+../../../mvnw spring-boot:run -Dspring-boot.run.jvmArguments="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000"
+----
+
+To debug the GeoServer plugin:
+
+1. Deploy the plugin to GeoServer
+2. Start GeoServer with remote debugging enabled
+3. Connect your IDE to the remote debugging port
+
+== Common Development Tasks
+
+=== Adding a New Rule Field
+
+To add a new field to the Rule object:
+
+1. Update the domain model in `domain/rule-management/src/main/java/.../Rule.java`
+2. Update the JPA entity in `integration/persistence-jpa/model/src/main/java/.../JpaRule.java`
+3. Update the OpenAPI model in `openapi/acl-api.yaml`
+4. Update mappers to handle the new field
+5. Update service implementations to use the new field
+6. Update tests to cover the new field
+7. Update UI if necessary
+
+=== Adding a New API Endpoint
+
+To add a new API endpoint:
+
+1. Define the endpoint in `openapi/acl-api.yaml`
+2. Generate the API code with `./mvnw clean generate-sources`
+3. Implement the controller
+4. Create service methods if needed
+5. Add tests for the new endpoint
+
+=== Extending the Plugin
+
+To extend the GeoServer plugin:
+
+1. Identify which part of the plugin to extend (access manager, UI, etc.)
+2. Create or modify classes in the appropriate plugin module
+3. Register new components in Spring context if needed
+4. Ensure plugin backward compatibility is maintained
+5. Add tests for the new functionality
+
+== Coding Guidelines
+
+=== Code Style
+
+* Follow the existing code style
+* Use Java's standard naming conventions
+* Prefer immutable objects where appropriate
+* Keep classes focused on a single responsibility
+* Add Javadoc for public APIs
+
+=== Testing Guidelines
+
+* Write unit tests for all business logic
+* Create integration tests for persistence and API layers
+* Use test fixtures and builders for test data
+* Follow the naming conventions:
+** `*Test.java` for unit tests
+** `*IT.java` for integration tests
+
+=== Documentation Guidelines
+
+* Document public APIs with Javadoc
+* Update README files for significant changes
+* Add or update the user guide for user-facing changes
+* Document design decisions in architecture documentation
+
+== Troubleshooting
+
+=== Common Issues
+
+==== Build Issues
+
+**Problem**: Build fails with compilation errors
+
+**Solution**: Check Java version, ensure you're using Java 11 or higher:
+
+[source,bash]
+----
+java -version
+./mvnw -version
+----
+
+==== Test Failures
+
+**Problem**: Integration tests fail with database errors
+
+**Solution**: Ensure the test database is configured properly:
+
+* Check database configuration in test resources
+* Ensure database permissions are correct
+* Verify database drivers are available
+
+==== Plugin Issues
+
+**Problem**: GeoServer plugin doesn't load or work correctly
+
+**Solution**:
+
+* Check GeoServer logs for errors
+* Verify GeoServer version compatibility
+* Ensure all required JARs are in the GeoServer classpath
+* Check configuration in GeoServer's `web.xml` and security config
+
+=== Getting Help
+
+* Open issues on the GitHub repository
+* Join the GeoServer community mailing list
+* Check the GeoServer community Slack channel
+
+== Advanced Topics
+
+=== Caching Strategy
+
+GeoServer ACL employs a multi-level caching strategy:
+
+* In-memory rule cache in the authorization service
+* Authorization decision cache keyed by request properties
+* Cache invalidation on rule changes
+* Optional distributed cache for clustered deployments
+
+=== Spatial Filtering
+
+Spatial filtering allows access control based on geographic boundaries:
+
+* Uses JTS for geometry operations
+* Leverages spatial database capabilities (PostGIS)
+* Supports various spatial operations (INTERSECT, CLIP, etc.)
+
+=== Performance Optimization
+
+Tips for optimizing performance:
+
+* Efficient rule organization (fewer rules, logical priority ordering)
+* Database indexing for rule queries
+* Appropriate caching configuration
+* Batching rule operations where possible
+
+=== Security Considerations
+
+When working on security-related code:
+
+* Follow the principle of least privilege
+* Always validate user input
+* Never expose sensitive information in responses
+* Consider potential bypass scenarios when implementing new features
+* Write thorough tests for security-critical functionality
+
+== Contribution Process
+
+=== Setting Up for Contribution
+
+1. Fork the repository on GitHub
+2. Clone your fork locally
+3. Set up the upstream remote:
++
+[source,bash]
+----
+git remote add upstream https://github.com/geoserver/geoserver-acl.git
+----
+
+=== Making Changes
+
+1. Create a feature branch:
++
+[source,bash]
+----
+git checkout -b feature/my-new-feature
+----
+
+2. Make your changes
+3. Run code formatters and linters:
++
+[source,bash]
+----
+./mvnw spotless:apply
+----
+
+4. Run tests to ensure your changes don't break anything:
++
+[source,bash]
+----
+./mvnw verify
+----
+
+=== Submitting a Pull Request
+
+1. Push your changes to your fork:
++
+[source,bash]
+----
+git push origin feature/my-new-feature
+----
+
+2. Create a pull request on GitHub
+3. Describe your changes clearly in the PR description
+4. Link to any related issues
+5. Wait for code review and address feedback
+
+=== Code Review Process
+
+* All code changes require review
+* CI must pass before merging
+* Major changes may require multiple reviewers
+* Address all review comments before merging
+
+== Appendix
+
+=== Key Classes Reference
+
+[cols="1,4"]
+|===
+|Class |Description
+
+|`Rule`
+|Core domain object for access rules
+
+|`AdminRule`
+|Domain object for administrative rules
+
+|`RuleFilter`
+|Criteria for querying and matching rules
+
+|`RuleAdminService`
+|Service for managing data access rules
+
+|`AdminRuleAdminService`
+|Service for managing administrative rules
+
+|`AuthorizationService`
+|Core service for authorization decisions
+
+|`ACLResourceAccessManager`
+|Main integration point with GeoServer
+
+|`RulesApiImpl`
+|REST API implementation for rules
+
+|`JpaRuleRepository`
+|JPA repository for rules
+|===
+
+=== Glossary
+
+[cols="1,4"]
+|===
+|Term |Definition
+
+|ACL
+|Access Control List - a list of rules that control access to resources
+
+|Rule
+|A definition of who can access what resources and how
+
+|Authorization
+|The process of determining if a user has permission to access a resource
+
+|Workspace
+|A GeoServer concept for organizing layers
+
+|Layer
+|A geospatial dataset published in GeoServer
+
+|Grant Type
+|The type of access permitted (ALLOW, DENY, LIMIT)
+
+|Priority
+|The order in which rules are evaluated (lower number = higher priority)
+
+|LayerDetails
+|Additional restrictions for layer access (attributes, area, etc.)
+|===

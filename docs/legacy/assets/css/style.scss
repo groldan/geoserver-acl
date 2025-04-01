@@ -1,0 +1,36 @@
+---
+---
+
+// This file intentionally left empty to let Jekyll's theming system do its work
+// Custom styles for AsciiDoc content
+
+/* AsciiDoc specific styling */
+.admonitionblock {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-left: 5px solid #ddd;
+  border-radius: 3px;
+}
+
+.admonitionblock.note {
+  border-left-color: #428bca;
+}
+
+.admonitionblock.warning {
+  border-left-color: #f0ad4e;
+}
+
+.admonitionblock.caution {
+  border-left-color: #d9534f;
+}
+
+.admonitionblock .icon {
+  font-weight: bold;
+  color: #555;
+  padding-right: 10px;
+}
+
+.admonitionblock .content {
+  display: inline;
+}

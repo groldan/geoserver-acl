@@ -1,0 +1,289 @@
+---
+layout: default
+title: User's Guide
+nav_order: 2
+has_children: true
+permalink: /users-guide/
+---
+= GeoServer ACL User's Guide
+:toc: left
+:sectnums:
+:imagesdir: images
+:icons: font
+
+== Introduction
+
+GeoServer ACL is an advanced authorization system for https://geoserver.org/[GeoServer].
+
+=== What is GeoServer ACL?
+
+GeoServer ACL is a powerful authorization system designed to work with GeoServer. It consists of:
+
+* An independent application service that manages access rules
+* A GeoServer plugin that requests authorization limits on a per-request basis
+
+=== Key Features
+
+* Fine-grained access control for GeoServer resources
+* Rule-based authorization system
+* Support for user and role-based permissions
+* Geospatial filtering capabilities
+* Attribute-level access control
+* Integration with GeoServer's existing authentication mechanisms
+
+=== How it Works
+
+As an administrator, you'll use GeoServer ACL to define rules that grant or deny access to published resources based on:
+
+* User credentials
+* The type of OWS service
+* Layers being requested
+* Geographic areas
+* Layer attributes
+
+As a user, when you perform requests to GeoServer (such as WMS GetMap or WFS GetFeatures), the ACL-based authorization engine will limit the visibility of resources and response contents to those matching the rules that apply to your credentials and request properties.
+
+NOTE: GeoServer ACL is not an authentication provider. It's an authorization manager that works with whatever authentication mechanism GeoServer is using.
+
+=== Heritage
+
+GeoServer ACL is an open source project that began as a fork of https://github.com/geoserver/geofence[GeoFence]. It follows similar logic for defining data access and administrative rules, so if you're familiar with GeoFence, it will be easy to understand GeoServer ACL.
+
+== Installation
+
+=== System Requirements
+
+* Java 11+ (Java 17 recommended)
+* GeoServer 2.19.x or newer
+* Database (PostgreSQL recommended, H2 supported for testing)
+
+=== Installing the ACL Service
+
+==== Docker Installation
+
+The simplest way to run the ACL service is using Docker:
+
+[source,bash]
+----
+docker run -p 8080:8080 -p 8081:8081 geoservercloud/gs-acl-service:latest
+----
+
+This will start the ACL service with:
+
+* API on port 8080 at context path `/acl`
+* Management endpoints on port 8081
+
+==== Manual Installation
+
+1. Download the latest release from GitHub
+2. Configure your database connection in `application.yml`
+3. Start the service:
+
+[source,bash]
+----
+java -jar gs-acl-service-<version>.jar
+----
+
+=== Installing the GeoServer Plugin
+
+1. Download the ACL plugin zip file for your GeoServer version
+2. Extract the contents to GeoServer's `WEB-INF/lib` directory
+3. Restart GeoServer
+
+==== Configuration in GeoServer
+
+1. Log in to GeoServer's admin interface
+2. Navigate to "Security" -> "ACL" in the left menu
+3. Configure the connection to your ACL service
+
+== Rule Management
+
+=== Understanding Rules
+
+Rules in GeoServer ACL define the access control policies. Each rule consists of:
+
+* Priority - Determines the order of rule evaluation (lower numbers = higher priority)
+* User/Role identification - Who the rule applies to
+* Resource identification - What the rule applies to
+* Access limits - What kind of access is granted/denied
+
+=== Rule Types
+
+==== Administrative Rules
+
+Administrative rules control access to GeoServer's administration functions. They determine which users can:
+
+* Access the GeoServer web admin interface
+* Modify workspaces, stores, layers
+* Manage security settings
+
+==== Data Access Rules
+
+Data access rules control access to the data served by GeoServer. They can specify:
+
+* Which layers a user can access
+* Which service requests (WMS, WFS, etc.) are allowed
+* Geographic areas accessible to a user (using spatial filters)
+* Attributes/properties visible to a user
+
+=== Creating Rules
+
+==== Using the Web Interface
+
+1. Log in to GeoServer
+2. Navigate to "Security" -> "ACL Rules"
+3. Click "Add new rule"
+4. Fill in the rule details
+5. Click "Save"
+
+==== Using the REST API
+
+The ACL service provides a REST API for managing rules programmatically:
+
+[source,bash]
+----
+# Create a new rule
+curl -X POST http://localhost:8080/acl/api/rules \
+  -H "Content-Type: application/json" \
+  -d '{
+    "priority": 100,
+    "userName": "user1",
+    "workspace": "workspace1",
+    "layer": "layer1",
+    "access": "ALLOW"
+  }'
+----
+
+=== Rule Evaluation
+
+Rules are evaluated in priority order (lowest number first). The first matching rule determines the access decision:
+
+1. Exact match rules are evaluated first
+2. More specific rules take precedence over general rules
+3. DENY rules take precedence over ALLOW rules of the same priority
+4. The default behavior (if no rules match) is determined by the ACL configuration
+
+== Advanced Configuration
+
+=== Spatial Filtering
+
+GeoServer ACL can limit access to specific geographic regions:
+
+1. Create a rule with a spatial filter
+2. Define the area using a WKT geometry
+3. Choose the appropriate spatial operation (INTERSECT, CLIP, etc.)
+
+=== Attribute Filtering
+
+To control access to specific attributes in a layer:
+
+1. Create a rule for the layer
+2. In the "Layer Details" section, specify which attributes are included/excluded
+3. Save the rule
+
+=== Service-Specific Restrictions
+
+You can create rules that apply to specific OGC services:
+
+1. Create a new rule
+2. Select the service (WMS, WFS, WCS, etc.)
+3. Optionally, specify a request type (GetMap, GetFeature, etc.)
+4. Configure the access limits
+5. Save the rule
+
+== Troubleshooting
+
+=== Common Issues
+
+==== Rule Not Being Applied
+
+* Check rule priority - higher priority rules may be overriding it
+* Verify the rule matches the user/resource correctly
+* Check for typos in usernames, layer names, etc.
+
+==== Performance Problems
+
+* Review rule ordering - put most frequently matched rules at higher priority
+* Consider adding caching
+* Check database performance
+
+=== Logging
+
+To enable debug logging:
+
+1. Add the following to GeoServer's logging configuration:
++
+[source,xml]
+----
+<logger name="org.geoserver.acl" level="DEBUG"/>
+----
+
+2. For the ACL service, modify `application.yml`:
++
+[source,yaml]
+----
+logging:
+  level:
+    org.geoserver.acl: DEBUG
+----
+
+== API Reference
+
+=== REST API
+
+The complete OpenAPI specification is available at:
+
+* http://localhost:8080/acl/api/v3/api-docs
+
+An interactive Swagger UI is available at:
+
+* http://localhost:8080/acl/api/swagger-ui.html
+
+=== Management API
+
+The ACL service exposes management endpoints on port 8081 by default:
+
+* Health check: http://localhost:8081/acl/actuator/health
+* Info: http://localhost:8081/acl/actuator/info (requires admin credentials)
+* Metrics: http://localhost:8081/acl/actuator/metrics (requires admin credentials)
+
+For more details, see the Spring Boot Actuator documentation.
+
+== Best Practices
+
+=== Rule Organization
+
+* Use a hierarchical approach to rules
+* Keep rule count manageable
+* Document your rule structure
+* Use role-based rules instead of individual user rules where possible
+
+=== Performance Optimization
+
+* Prioritize rules correctly
+* Use caching
+* Monitor rule evaluation time
+* Consider using database indices for large rule sets
+
+=== Security Considerations
+
+* Implement proper authentication before ACL
+* Use HTTPS for all communications
+* Regularly audit your rules
+* Follow the principle of least privilege
+
+== Appendix
+
+=== Migration from GeoFence
+
+If you're migrating from GeoFence to GeoServer ACL:
+
+1. Export your GeoFence rules
+2. Import them into GeoServer ACL
+3. Test thoroughly before switching over
+
+=== Further Resources
+
+* GitHub Repository: https://github.com/geoserver/geoserver-acl
+* Issue Tracker: https://github.com/geoserver/geoserver-acl/issues
+* GeoServer Documentation: https://docs.geoserver.org/

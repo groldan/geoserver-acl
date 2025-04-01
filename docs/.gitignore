@@ -1,0 +1,18 @@
+# Jekyll build directories
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+
+# Asciidoctor generated HTML and PDF files
+*/build/
+**/*/build/
+*/*/build/
+
+# Generated files
+.bundle/
+vendor/
+Gemfile.lock
+
+# Converted files
+management.adoc

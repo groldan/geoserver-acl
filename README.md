@@ -1,106 +1,112 @@
+# GeoServer Access Control List (ACL)
+
 ![build](https://github.com/geoserver/geoserver-acl/actions/workflows/build.yaml/badge.svg)
 ![plugin](https://github.com/groldan/geoserver-acl/actions/workflows/build-plugin.yaml/badge.svg)
 
-# GeoServer Access Control List (ACL)
+<div align="center">
+  <img src="docs/assets/images/acl.svg" alt="GeoServer ACL Logo" width="220px" />
+  <br>
+  <strong>Advanced geospatial authorization for GeoServer</strong>
+</div>
 
-GeoServer ACL is an advanced authorization system for [GeoServer](https://geoserver.org/).
+## What is GeoServer ACL?
 
-It consists of an independent application service that manages access rules,
-and a GeoServer plugin that requests authorization limits on a per-request basis.
+GeoServer ACL is a powerful authorization system that brings fine-grained access control to [GeoServer](https://geoserver.org/), allowing you to:
 
-As an administrator you'll use GeoServer ACL to define rules
-that grant or deny access to published resources based on
-service request properties such user credentials, the type
-of OWS service, and layers being requested.
+- **Control access to geospatial data** based on user identity, roles, and request properties
+- **Restrict data by geographic area** through spatial filtering
+- **Filter sensitive attributes** from layers on a per-user basis
+- **Centralize authorization** across multiple GeoServer instances
+- **Integrate seamlessly** with existing authentication systems
 
-These rules can be as open as to grant or deny access
-to whole GeoServer workspaces, or as granular as to specify
-which geographical areas and layer attributes to allow a
-specific user or user group to see.
+Whether you're protecting sensitive infrastructure data, implementing data privacy regulations, or managing access across organizational boundaries, GeoServer ACL provides the tools to implement sophisticated authorization policies while maintaining performance.
 
-As a user you'll perform requests to GeoServer such as WMS GetMap or WFS GetFeatures,
-and the ACL-based authorization engine will limit the visibility
-of the resources and contents of the responses to those matching
-the rules that apply to the request properties and the authenticated
-user credentials.
+## Key Features
 
-GeoServer ACL is not an authentication provider. It's an authorization
-manager that will use the authenticated user credentials, whether
-they come from Basic HTTP, OAuth2/OpenID Connect, or whatever authentication
-mechanism GeoServer is using, to resolve the access rules that apply
-to each particular request.
+- **Fine-Grained Rules**: Control access at workspace, layer, or attribute level
+- **Spatial Filtering**: Limit data access to specific geographic areas
+- **Attribute Filtering**: Hide sensitive fields from unauthorized users
+- **OGC Service Control**: Manage access to specific OGC services (WMS, WFS, WCS, etc.)
+- **Role-Based Policies**: Define permissions based on user roles and groups
+- **Rule Priority System**: Create sophisticated rule hierarchies with override capabilities
+- **REST API**: Manage rules programmatically through a comprehensive API
+- **Web Interface**: User-friendly UI for rule management directly in GeoServer
+- **High Performance**: Optimized for production environments with caching support
+- **Flexible Deployment**: Run as a standalone service or embedded in GeoServer
 
-GeoServer ACL is Open Source, born as a
-[fork](https://en.wikipedia.org/wiki/Fork_%28software_development%29) of 
-[GeoFence](https://github.com/geoserver/geofence).
-As such, it follows the same logic to define data access and administrative
-access rules. So if you're familiar with GeoFence, it'll be easy to reason
-about GeoServer ACL.
+## Use Cases
 
-## Building
+- **Telecommunications**: Restrict field technicians to data in their assigned territories
+- **Government**: Share public data while protecting sensitive information
+- **Utilities**: Protect critical infrastructure data while enabling operational access
+- **Environmental Agencies**: Control access to sensitive ecological data
+- **Urban Planning**: Manage data access across multiple departments and stakeholders
 
-Requirements:
+See our [case studies](docs/case_studies/index.md) for real-world implementation examples.
+
+## Architecture
+
+GeoServer ACL consists of two main components:
+
+1. **ACL Service**: A standalone Spring Boot application that manages access rules and provides authorization decisions
+2. **GeoServer Plugin**: Integrates with GeoServer to enforce access control on each request
+
+![System Architecture](docs/assets/images/structurizr/structurizr-SystemContext.svg)
+
+## Getting Started
+
+### Prerequisites
+
+- Java 11+ (Java 17 recommended)
+- PostgreSQL with PostGIS (for production deployments)
+- GeoServer 2.19+
+
+### Installation
+
+The quickest way to get started is with Docker:
+
+```bash
+docker-compose -f compose/compose.yml up
+```
+
+For detailed installation instructions, see our [Installation Guide](docs/admin_guide/installation.md).
+
+## Documentation
+
+- [User Guide](docs/user_guide/index.md) - For users managing access rules
+- [Administrator Guide](docs/admin_guide/index.md) - For system administrators
+- [Developer Guide](docs/developer_guide/index.md) - For developers integrating with or extending ACL
+- [Technical Documentation](docs/technical/index.md) - In-depth architecture and design documentation
+- [API Reference](docs/api/index.md) - REST API documentation
+
+## Building from Source
+
+### Requirements
 
 - Java 17 JDK
+- Maven 3.8+
 
-A Java 17 JDK is required to build the project.
-
-The artifacts (e.g. those under [src/domain](./src/domain/README.md)
-and [src/plugin](./src/plugin/README.md) ) that are part of the GeoServer plugin will still be compiled to Java 11 class compatibility.
-
-```
+```bash
 ./mvnw clean install
 ```
 
-A [Makefile](Makefile) is also provided with useful targets for the CI build:
+A [Makefile](Makefile) is also provided with useful targets:
 
-* `make lint`: validates source code and `pom.xml` files formatting. Used to fail the build if ill-formatted code or project configuration is pushed to github.
-* `make format`: applies source code and `pom.xml` formatters, may modify files. Useful to ensure code and project configurations are properly formatted before pushing commits to github.
-* `make package`: builds the projects without installing the maven artifacts to the local maven repository.
-* `make test`: runs unit and integration tests.
-* `make build-image`: builds a Docker image for the [GeoServer ACL application](src/artifacts/api/README.md).
-* `make push-image`: pushes the Docker image to docker hub.
-
+- `make format`: Format source code and project configuration
+- `make lint`: Validate formatting
+- `make install`: Build and install artifacts
+- `make test`: Run unit and integration tests
+- `make build-image`: Build Docker image
+- `make run`: Run a development instance
 
 ## Contributing
 
-Please read the [contribution guidelines](CONTRIBUTING.md) before contributing pull requests to the GeoServer ACL project.
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) before submitting pull requests.
 
-## Dependency graph
+## License
 
-```mermaid
-flowchart LR
-  subgraph domain
-    adminrule-management --> object-model & rule-management
-    authorization --> adminrule-management & rule-management
-    rule-management --> object-model
-  end
-  subgraph openapi-codegen
-    openapi-server --> openapi-model
-    openapi-client --> openapi-model
-  end
-  subgraph integration
-    subgraph persistence-jpa
-        jpa-integration --> jpa-persistence
-    end
-    subgraph spring-integration
-        domain-spring-integration -. optional> .-> rule-management & adminrule-management & authorization
-    end
-    subgraph openapi-integration
-        api-model-mapper --> object-model & openapi-model
-        api-impl --> api-model-mapper & openapi-server & domain-spring-integration & rule-management & adminrule-management
-        api-client --> api-model-mapper & openapi-client
-    end
-    subgraph spring-boot-integration
-        spring-boot-autoconfiguration --> domain-spring-integration & api-impl & jpa-integration
-    end
-  end
-  subgraph geoserver-plugin
-    plugin-webui --> plugin-accessmanager
-    plugin-rest --> plugin-accessmanager & api-impl
-    plugin --> plugin-accessmanager & plugin-rest & plugin-webui
-  end
-  subgraph application
-    rest-app --> spring-boot-autoconfiguration
-  end
-```
+GeoServer ACL is licensed under the [GPL v2.0 License](LICENSE).
+
+## Acknowledgements
+
+GeoServer ACL is a fork of [GeoFence](https://github.com/geoserver/geofence), bringing modern architecture and enhanced features while maintaining compatibility with its rule-based approach.

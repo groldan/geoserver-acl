@@ -1,0 +1,87 @@
+title: GeoServer ACL
+description: GeoServer Access Control List admin and authorization
+baseurl: "/geoserver-acl"
+url: "https://geoserver.github.io"
+
+# Theme settings
+remote_theme: just-the-docs/just-the-docs
+
+# Just the Docs settings
+color_scheme: light
+search_enabled: true
+heading_anchors: true
+nav_external_links:
+  - title: GeoServer ACL on GitHub
+    url: https://github.com/geoserver/geoserver-acl
+    hide_icon: false
+    opens_in_new_tab: true
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+
+# Plugins
+plugins:
+  - jekyll-remote-theme
+  - jekyll-seo-tag
+  - jekyll-asciidoc
+  - jekyll-include-cache
+
+# AsciiDoc settings
+asciidoc:
+  processor: asciidoctor
+  ext: asciidoc,adoc,ad
+
+asciidoctor:
+  base_dir: :docdir
+  safe: unsafe
+  attributes:
+    icons: font
+    source-highlighter: rouge
+    sectanchors: true
+    idprefix: ""
+    idseparator: "-"
+    toclevels: 3
+    sectnums: ""
+    imagesdir: images
+    hardbreaks: ""
+    showtitle: ""
+    experimental: ""
+
+# Collections
+collections:
+  users-guide:
+    output: true
+    permalink: /:collection/:path/
+    nav_order: 10
+  developers-guide:
+    output: true
+    permalink: /:collection/:path/
+    nav_order: 20
+  technical:
+    output: true
+    permalink: /:collection/:path/
+    nav_order: 30
+
+# Default settings
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+  - scope:
+      path: "*.adoc"
+    values:
+      layout: default
+  - scope:
+      path: "users-guide"
+    values:
+      parent: "User's Guide"
+  - scope:
+      path: "developers-guide"
+    values:
+      parent: "Developer's Guide"
+  - scope:
+      path: "technical"
+    values:
+      parent: "Technical Documentation"

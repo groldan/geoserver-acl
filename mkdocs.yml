@@ -1,0 +1,123 @@
+site_name: GeoServer ACL Documentation
+site_description: Documentation for GeoServer Access Control List (ACL)
+site_author: GeoServer Community
+copyright: "&copy; 2023-2025 Open Source Geospatial Foundation"
+repo_url: https://github.com/geoserver/geoserver-acl
+edit_uri: edit/main/docs/
+site_url: https://geoserver.github.io/geoserver-acl/
+docs_dir: docs
+
+theme:
+  name: material
+  logo: assets/images/logo-small.svg
+  favicon: assets/images/favicon.ico
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: deep orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  icon:
+    repo: fontawesome/brands/github
+  
+extra_css:
+  - assets/stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+  - git-revision-date-localized:
+      type: date
+  - glightbox
+
+nav:
+  - Home: index.md
+  - Verification Checklist: VERIFICATION_CHECKLIST.md
+  - User Guide:
+    - user_guide/index.md
+    - Understanding Access Control: user_guide/access_control.md
+    - Using OWS Services: user_guide/ows_services.md
+    - Workspace Administration: user_guide/workspace_admin.md
+    - Troubleshooting: user_guide/troubleshooting.md
+  - Administrator Guide:
+    - admin_guide/index.md
+    - Installation: admin_guide/installation.md
+    - Configuration: admin_guide/configuration.md
+    - Rule Management: admin_guide/rule_management.md
+    - Admin Rule Management: admin_guide/admin_rule_management.md
+    - Spatial & Attribute Filtering: admin_guide/filtering.md
+    - REST API Usage: admin_guide/rest_api.md
+    - Monitoring: admin_guide/monitoring.md
+    - Migration from GeoFence: admin_guide/geofence_migration.md
+  - Developer Guide:
+    - developer_guide/index.md
+    - Architecture: developer_guide/architecture.md
+    - Building from Source: developer_guide/building.md
+    - API Integration: developer_guide/api_integration.md
+    - Plugin Development: developer_guide/plugin_development.md
+    - Release Guide: developer_guide/release_guide.md
+    - Contributing: developer_guide/contributing.md
+  - Technical Documentation:
+    - technical/index.md
+    - Introduction & Goals: technical/01-introduction-and-goals.md
+    - Architecture Constraints: technical/02-architecture-constraints.md
+    - System Scope & Context: technical/03-system-scope-and-context.md
+    - Solution Strategy: technical/04-solution-strategy.md
+    - Building Block View: technical/05-building-block-view.md
+    - Runtime View: technical/06-runtime-view.md
+    - Deployment View: technical/07-deployment-view.md
+    - Cross-cutting Concepts: technical/08-cross-cutting-concepts.md
+    - Architecture Decisions: technical/09-architecture-decisions.md
+    - Quality Requirements: technical/10-quality-requirements.md
+    - Risks & Technical Debt: technical/11-risks.md
+    - Glossary: technical/12-glossary.md
+  - API Reference:
+    - api/index.md
+    - Data Rules API: api/rules.md
+    - Admin Rules API: api/admin_rules.md
+    - Authorization API: api/authorization.md
+    - Client Examples: api/client_examples.md
+  - Case Studies:
+    - case_studies/index.md
+    - Telecommunications Field Data: case_studies/telecom.md
+    - Environmental Agency Data: case_studies/environmental_agency.md
+    - Utility Company Asset Management: case_studies/utility.md
+    - GeoServer Cloud Integration: case_studies/geoserver_cloud.md

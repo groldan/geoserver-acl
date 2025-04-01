@@ -1,0 +1,165 @@
+---
+title: "Glossary"
+layout: asciidoc
+collection: technical
+---
+= Glossary
+:imagesdir: images
+:toc: left
+:sectnums:
+
+== Introduction
+
+This glossary provides definitions for the key terms and concepts used throughout the GeoServer ACL documentation. It aims to establish a common vocabulary for developers, administrators, and users working with the system.
+
+== Terms and Definitions
+
+[cols="1,4"]
+|===
+|Term |Definition
+
+|ACL
+|**Access Control List**. A list of rules that specify which users or systems are granted or denied access to particular resources.
+
+|Admin Rule
+|A rule that controls access to administrative functions in GeoServer, such as managing workspaces, layers, and services.
+
+|Authentication
+|The process of verifying the identity of a user or system. GeoServer ACL relies on external authentication but makes authorization decisions based on authenticated identities.
+
+|Authorization
+|The process of determining whether a particular user or system has permission to access a specific resource or perform a specific action. This is the primary function of GeoServer ACL.
+
+|Bounded Context
+|A Domain-Driven Design concept representing a specific responsibility with an explicit boundary. Each bounded context contains models that are valid only within that context.
+
+|Cache
+|A component that stores authorization decisions or rules to improve performance by avoiding repeated database lookups or calculations.
+
+|Data Access Rule
+|A rule that controls access to data resources in GeoServer, such as layers, feature types, and their attributes.
+
+|Domain Model
+|The conceptual model of a domain that incorporates both behavior and data, forming the core of the application's business logic.
+
+|Feature Type
+|A class of geographic features with common properties, represented as a layer in GeoServer.
+
+|GeoFence
+|The predecessor project to GeoServer ACL, providing similar rule-based authorization capabilities for GeoServer.
+
+|GeoServer
+|An open-source server for sharing, processing, and editing geospatial data.
+
+|Grant Type
+|The type of access granted by a rule: ALLOW (permit access), DENY (refuse access), or LIMIT (permit access with restrictions).
+
+|Hexagonal Architecture
+|An architectural pattern that isolates the core business logic from external concerns through ports and adapters.
+
+|JPA
+|**Java Persistence API**. A specification for managing relational data in Java applications, used by GeoServer ACL for database access.
+
+|Layer
+|A collection of geographic features of a similar type, such as roads, buildings, or administrative boundaries.
+
+|Layer Details
+|Additional access limitations associated with a rule, including allowed attributes, spatial filters, and CQL filters.
+
+|OGC
+|**Open Geospatial Consortium**. An international organization that develops open standards for geospatial content and services.
+
+|OWS
+|**OGC Web Services**. A family of services, including WMS, WFS, and WCS, for accessing geospatial data over the web.
+
+|PostGIS
+|A spatial database extension for PostgreSQL, adding support for geographic objects and enabling spatial operations.
+
+|Priority
+|A numerical value assigned to rules that determines their evaluation order. Rules with lower priority values are evaluated first.
+
+|Repository
+|A pattern that mediates between the domain model and the data mapping layer, providing collection-like access to domain objects.
+
+|ResourceAccessManager
+|A GeoServer extension point that allows plugins to control access to catalog resources.
+
+|REST API
+|A set of HTTP endpoints that expose GeoServer ACL's functionality for rule management and authorization decisions.
+
+|Role
+|A collection of permissions assigned to users. GeoServer ACL can define rules based on user roles.
+
+|Rule
+|A definition that specifies who can access what resources under what conditions.
+
+|Rule Filter
+|A set of criteria used to match rules to a specific authorization request.
+
+|Service
+|An OGC web service (like WMS, WFS, WCS) that provides access to geospatial data.
+
+|Spatial Filter
+|A geometric constraint applied to data access, limiting visibility to features that satisfy a spatial relationship with a reference geometry.
+
+|Spring Boot
+|A framework that simplifies the development of stand-alone, production-grade Spring applications.
+
+|WFS
+|**Web Feature Service**. An OGC standard for requesting geographic features across the web.
+
+|WMS
+|**Web Map Service**. An OGC standard for requesting map images from geographic data.
+
+|Workspace
+|A logical container for organizing related data layers in GeoServer.
+|===
+
+== Acronyms
+
+[cols="1,4"]
+|===
+|Acronym |Full Form
+
+|ACL
+|Access Control List
+
+|API
+|Application Programming Interface
+
+|CQL
+|Common Query Language
+
+|DDD
+|Domain-Driven Design
+
+|DTO
+|Data Transfer Object
+
+|JPA
+|Java Persistence API
+
+|OGC
+|Open Geospatial Consortium
+
+|ORM
+|Object-Relational Mapping
+
+|OWS
+|OGC Web Services
+
+|REST
+|Representational State Transfer
+
+|WCS
+|Web Coverage Service
+
+|WFS
+|Web Feature Service
+
+|WMS
+|Web Map Service
+
+|WMTS
+|Web Map Tile Service
+|===

@@ -1,37 +1,63 @@
-# GeoServer Access Control List (ACL)
+# GeoServer ACL Documentation
 
-GeoServer ACL is an advanced authorization system for [GeoServer](https://geoserver.org/).
+![GeoServer ACL Logo](assets/images/logo.svg){: style="display: block; margin: 0 auto; max-width: 300px;"}
 
-It consists of an independent application service that manages access rules,
-and a GeoServer plugin that requests authorization limits on a per-request basis.
+## What is GeoServer ACL?
 
-As an administrator you'll use GeoServer ACL to define rules
-that grant or deny access to published resources based on
-service request properties such user credentials, the type
-of OWS service, and layers being requested.
+GeoServer ACL is an advanced authorization system for [GeoServer](https://geoserver.org/), providing fine-grained access control to geospatial resources. It consists of:
 
-These rules can be as open as to grant or deny access
-to whole GeoServer workspaces, or as granular as to specify
-which geographical areas and layer attributes to allow a
-specific user or user group to see.
+1. An independent application service that manages access rules
+2. A GeoServer plugin that applies these rules on a per-request basis
 
-As a user you'll perform requests to GeoServer such as WMS GetMap or WFS GetFeatures,
-and the ACL-based authorization engine will limit the visibility
-of the resources and contents of the responses to those matching
-the rules that apply to the request properties and the authenticated
-user credentials.
+## Key Features
 
-GeoServer ACL is not an authentication provider. It's an authorization
-manager that will use the authenticated user credentials, whether
-they come from Basic HTTP, OAuth2/OpenID Connect, or whatever authentication
-mechanism GeoServer is using, to resolve the access rules that apply
-to each particular request.
+- **Fine-grained Authorization**: Control access at the workspace, layer, feature, and attribute levels
+- **Spatial Filtering**: Limit users to specific geographic areas
+- **Attribute Filtering**: Control which attributes users can access
+- **Service-based Restrictions**: Different rules for different OWS services (WMS, WFS, WCS)
+- **Administration Controls**: Granular workspace administration privileges
+- **Flexible Rule System**: Prioritized rules with cascading effects
+- **REST API**: Programmatic access for integration with other systems
 
-GeoServer ACL is Open Source, born as a
-[fork](https://en.wikipedia.org/wiki/Fork_%28software_development%29) of 
-[GeoFence](https://github.com/geoserver/geofence).
-As such, it follows the same logic to define data access and administrative
-access rules. So if you're familiar with GeoFence, it'll be easy to reason
-about GeoServer ACL.
+## How it Works
 
+As an administrator, you define rules that grant or deny access to GeoServer resources based on:
 
+- User identity and roles
+- Requested layers and workspaces
+- Service types (WMS, WFS, WCS, etc.)
+- Request operations (GetMap, GetFeature, etc.)
+- Client IP address
+
+When users access GeoServer, the ACL authorization engine evaluates these rules to determine:
+
+- Which resources they can see
+- What geographic areas they can access
+- Which attributes are visible
+- What administrative actions they can perform
+
+![Authorization Flow](assets/images/acl.svg)
+
+## Getting Started
+
+Choose the guide that best fits your role:
+
+- [**User Guide**](user_guide/index.md): For end users accessing GeoServer services
+- [**Administrator Guide**](admin_guide/index.md): For setting up and managing GeoServer ACL
+- [**Developer Guide**](developer_guide/index.md): For developers integrating with or extending GeoServer ACL
+- [**Technical Documentation**](technical/index.md): For in-depth architectural information
+- [**API Reference**](api/index.md): For programmatic integration
+
+## About GeoServer ACL
+
+GeoServer ACL is open source software, created as a fork of [GeoFence](https://github.com/geoserver/geofence). It follows the same logical approach to rule definition while providing additional features and improvements.
+
+If you're familiar with GeoFence, transitioning to GeoServer ACL will be straightforward. For a comparison and migration guide, see [Migration from GeoFence](admin_guide/geofence_migration.md).
+
+## Community and Support
+
+GeoServer ACL is maintained by the GeoServer community as part of the broader GeoServer ecosystem. It is licensed under the GPL 2.0 license.
+
+- [GitHub Repository](https://github.com/geoserver/geoserver-acl)
+- [Issue Tracker](https://github.com/geoserver/geoserver-acl/issues)
+- [GeoServer Community](https://geoserver.org/comm/)

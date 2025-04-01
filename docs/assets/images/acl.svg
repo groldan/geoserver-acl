@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <!-- Background Shield -->
+  <path d="M8 1 L14 3.5 L14 8 C14 12 12 14 8 15 C4 14 2 12 2 8 L2 3.5 Z" 
+        fill="#28728D" stroke="#1E5162" stroke-width="0.5"/>
+  
+  <!-- Stylized Globe/Earth - All White -->
+  <circle cx="8" cy="8" r="4" fill="#ffffff"/>
+  
+  <!-- Globe Lines - White Grid -->
+  <ellipse cx="8" cy="8" rx="4" ry="4" fill="none" stroke="#ffffff" stroke-width="0.4"/>
+  <ellipse cx="8" cy="8" rx="4" ry="2" fill="none" stroke="#ffffff" stroke-width="0.4"/>
+  <line x1="4" y1="8" x2="12" y2="8" stroke="#ffffff" stroke-width="0.4"/>
+  <line x1="8" y1="4" x2="8" y2="12" stroke="#ffffff" stroke-width="0.4"/>
+  
+  <!-- ACL Checkmark - Green on white space -->
+  <path d="M6 8 L7.5 10 L10 6" fill="none" stroke="#82AB1F" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,254 @@
+---
+title: "Runtime View"
+layout: asciidoc
+collection: technical
+---
+= Runtime View
+:imagesdir: images
+:toc: left
+:sectnums:
+
+== Introduction
+
+This section describes the dynamic behavior of the GeoServer ACL system, focusing on the runtime interactions between components for key scenarios. The runtime view complements the static building block view by showing how the system behaves during execution.
+
+== Authorization Request Scenario
+
+The most important runtime scenario is the authorization of a GeoServer request, which involves the GeoServer plugin and the ACL service.
+
+=== Basic Flow
+
+[plantuml, authorization-basic-flow, svg]
+....
+@startuml
+actor User
+participant "GeoServer" as GS
+participant "ACL Plugin" as Plugin
+participant "ACL Service" as Service
+database "Database" as DB
+
+User -> GS: WMS GetMap Request
+activate GS
+GS -> Plugin: Check authorization
+activate Plugin
+Plugin -> Service: Authorization request
+activate Service
+Service -> DB: Fetch matching rules
+activate DB
+DB --> Service: Rules
+deactivate DB
+Service -> Service: Evaluate rules
+Service --> Plugin: Authorization decision
+deactivate Service
+Plugin -> Plugin: Apply access limits
+Plugin --> GS: Access limits
+deactivate Plugin
+GS -> GS: Filter data according to limits
+GS --> User: Filtered WMS response
+deactivate GS
+@enduml
+....
+
+=== Runtime Behavior
+
+1. A user sends a WMS GetMap request to GeoServer
+2. GeoServer's security framework invokes the ACL ResourceAccessManager
+3. The ACL plugin extracts the request properties (user, layer, service, etc.)
+4. The plugin sends an authorization request to the ACL service
+5. The ACL service queries the database for matching rules
+6. The service evaluates the rules based on priority
+7. The service returns an authorization decision with any access limits
+8. The plugin translates the decision into GeoServer access limits
+9. GeoServer applies the access limits to filter the response
+10. GeoServer returns the filtered response to the user
+
+== Rule Management Scenario
+
+Another important scenario is the management of access rules, which involves administrators interacting with the ACL service.
+
+=== Rule Creation Flow
+
+[plantuml, rule-creation-flow, svg]
+....
+@startuml
+actor Admin
+participant "GeoServer Admin UI" as UI
+participant "ACL Service" as Service
+database "Database" as DB
+
+Admin -> UI: Create new rule
+activate UI
+UI -> Service: POST /rules
+activate Service
+Service -> Service: Validate rule
+Service -> DB: Save rule
+activate DB
+DB --> Service: Rule saved
+deactivate DB
+Service -> Service: Publish rule change event
+Service --> UI: Rule created response
+deactivate Service
+UI --> Admin: Confirmation
+deactivate UI
+@enduml
+....
+
+=== Runtime Behavior
+
+1. An administrator creates a new rule via the GeoServer admin UI
+2. The UI sends a POST request to the ACL service's rule endpoint
+3. The ACL service validates the rule (syntax, conflicts, etc.)
+4. The service saves the rule to the database
+5. The service publishes a rule change event for cache invalidation
+6. The service returns a success response to the UI
+7. The UI shows a confirmation to the administrator
+
+== Spatial Filtering Scenario
+
+Spatial filtering is a key feature of GeoServer ACL that limits data access based on geographic areas.
+
+=== Spatial Filtering Flow
+
+[plantuml, spatial-filtering-flow, svg]
+....
+@startuml
+actor User
+participant "GeoServer" as GS
+participant "ACL Plugin" as Plugin
+participant "ACL Service" as Service
+database "Database" as DB
+
+User -> GS: WFS GetFeature Request
+activate GS
+GS -> Plugin: Check authorization
+activate Plugin
+Plugin -> Service: Authorization request with layer info
+activate Service
+Service -> DB: Fetch rules with spatial filters
+activate DB
+DB --> Service: Rules with geometries
+deactivate DB
+Service -> Service: Evaluate spatial rules
+Service --> Plugin: Access limits with area restriction
+deactivate Service
+Plugin -> GS: Create spatial filter
+deactivate Plugin
+GS -> GS: Apply spatial filter to query
+GS --> User: Filtered features (only in allowed area)
+deactivate GS
+@enduml
+....
+
+=== Runtime Behavior
+
+1. A user sends a WFS GetFeature request to GeoServer
+2. GeoServer's security framework invokes the ACL ResourceAccessManager
+3. The ACL plugin sends an authorization request to the ACL service
+4. The service queries for rules with spatial filters for the requested layer
+5. The service evaluates the rules and determines the allowed spatial area
+6. The service returns access limits including the spatial restriction
+7. The plugin creates a spatial filter based on the allowed area
+8. GeoServer applies the spatial filter to the data query
+9. GeoServer returns only features within the allowed area
+
+== Caching Behavior
+
+Caching is critical for performance in GeoServer ACL, especially for authorization decisions.
+
+=== Cache Operation
+
+[plantuml, cache-operation, svg]
+....
+@startuml
+participant "ACL Plugin" as Plugin
+participant "Client Cache" as ClientCache
+participant "ACL Service" as Service
+participant "Service Cache" as ServiceCache
+database "Database" as DB
+
+Plugin -> ClientCache: Check for cached decision
+activate ClientCache
+alt Cache hit
+    ClientCache --> Plugin: Return cached decision
+else Cache miss
+    ClientCache --> Plugin: Cache miss
+    Plugin -> Service: Authorization request
+    activate Service
+    Service -> ServiceCache: Check for cached rules
+    activate ServiceCache
+    alt Cache hit
+        ServiceCache --> Service: Return cached rules
+    else Cache miss
+        ServiceCache --> Service: Cache miss
+        Service -> DB: Fetch rules
+        activate DB
+        DB --> Service: Rules
+        deactivate DB
+        Service -> ServiceCache: Cache rules
+    end
+    deactivate ServiceCache
+    Service -> Service: Evaluate rules
+    Service --> Plugin: Authorization decision
+    deactivate Service
+    Plugin -> ClientCache: Cache decision
+end
+deactivate ClientCache
+@enduml
+....
+
+=== Runtime Behavior
+
+1. The ACL plugin checks its local cache for a matching authorization decision
+2. If found (cache hit), the cached decision is used immediately
+3. If not found (cache miss), the plugin requests authorization from the ACL service
+4. The ACL service checks its rule cache for matching rules
+5. If rules are cached, they are used for evaluation
+6. If rules are not cached, they are fetched from the database and then cached
+7. The service evaluates the rules and returns an authorization decision
+8. The plugin caches the decision for future similar requests
+
+== Event-Driven Communication
+
+GeoServer ACL uses events for communication between components, particularly for cache invalidation.
+
+=== Rule Change Propagation
+
+[plantuml, rule-change-event, svg]
+....
+@startuml
+actor Admin
+participant "ACL Service" as Service
+participant "Event Bus" as Bus
+participant "Cache Manager" as Cache
+participant "ACL Plugin" as Plugin
+
+Admin -> Service: Update rule
+activate Service
+Service -> Service: Process rule update
+Service -> Bus: Publish RuleChanged event
+activate Bus
+Bus -> Cache: Notify rule change
+activate Cache
+Cache -> Cache: Invalidate affected cache entries
+deactivate Cache
+Bus -> Plugin: Notify rule change (if distributed)
+activate Plugin
+Plugin -> Plugin: Invalidate local cache
+deactivate Plugin
+Bus --> Service: Event published
+deactivate Bus
+Service --> Admin: Rule updated
+deactivate Service
+@enduml
+....
+
+=== Runtime Behavior
+
+1. An administrator updates a rule via the ACL service
+2. The service processes the update and persists it
+3. The service publishes a RuleChanged event to the event bus
+4. The event bus notifies the cache manager about the rule change
+5. The cache manager invalidates affected cache entries
+6. If using distributed caching, the event is propagated to GeoServer plugins
+7. Each plugin invalidates its local cache
+8. The service confirms the rule update to the administrator

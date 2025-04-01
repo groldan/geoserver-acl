@@ -1,0 +1,193 @@
+---
+title: "System Scope and Context"
+layout: asciidoc
+collection: technical
+---
+= System Scope and Context
+:imagesdir: images
+:toc: left
+:sectnums:
+
+== Business Context
+
+GeoServer ACL operates within the context of Geographic Information System (GIS) data infrastructure, particularly in environments where controlling access to geospatial data is critical.
+
+=== Business Context Diagram
+
+[plantuml, business-context, svg]
+....
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(admin, "GeoServer Admin", "Configures access rules and GeoServer")
+Person(user, "End User", "Accesses geospatial data via OGC services")
+
+System(geoserver, "GeoServer", "OGC-compliant geospatial data server")
+System(aclSystem, "GeoServer ACL", "Authorization system that enforces access rules")
+System_Ext(authSystem, "Authentication System", "Verifies user identity (LDAP, OAuth2, etc.)")
+System_Ext(spatialDB, "Spatial Database", "Stores geospatial data (PostGIS, etc.)")
+
+Rel(user, geoserver, "Requests geospatial data from", "OGC services (WMS, WFS, etc.)")
+Rel(admin, geoserver, "Configures")
+Rel(admin, aclSystem, "Manages access rules")
+Rel(geoserver, aclSystem, "Requests authorization decisions from")
+Rel(geoserver, authSystem, "Authenticates users via")
+Rel(geoserver, spatialDB, "Retrieves data from")
+Rel(aclSystem, authSystem, "Uses identity information from")
+
+@enduml
+....
+
+=== External Systems and Interfaces
+
+[cols="1,4,2,4"]
+|===
+|System |Description |Interface Type |Data Exchanged
+
+|GeoServer
+|OGC-compliant geospatial data server
+|REST API, Java API
+|Access request details, resource information, authorization decisions
+
+|Authentication Systems
+|External identity providers (LDAP, OAuth2, etc.)
+|Authentication tokens
+|User identity and role information
+
+|Spatial Database
+|Store for geospatial data (PostGIS, Oracle Spatial, etc.)
+|SQL, JDBC
+|Spatial data for filtering
+
+|Management Clients
+|Web browsers, API clients
+|HTTP/REST
+|Rule management commands
+|===
+
+== Technical Context
+
+=== Technical Context Diagram
+
+[plantuml, technical-context, svg]
+....
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(admin, "GeoServer Admin", "Configures access rules and GeoServer")
+Person(user, "End User", "Accesses geospatial data via OGC services")
+
+System_Boundary(aclSystemBoundary, "GeoServer ACL") {
+    Container(aclService, "ACL Service", "Spring Boot", "Manages access rules and provides authorization decisions")
+    ContainerDb(aclDb, "ACL Database", "PostgreSQL/H2", "Stores access rules")
+}
+
+System_Boundary(geoserverBoundary, "GeoServer") {
+    Container(geoserverCore, "GeoServer Core", "Java", "OGC-compliant geospatial data server")
+    Container(aclPlugin, "ACL Plugin", "Java", "Integrates with GeoServer security framework")
+}
+
+System_Ext(authSystem, "Identity Provider", "LDAP, OAuth2, etc.")
+System_Ext(spatialDb, "Spatial Database", "PostGIS, Oracle Spatial, etc.")
+
+Rel(user, geoserverCore, "Accesses geospatial data via", "OGC services (WMS, WFS, etc.)")
+Rel(admin, aclService, "Manages access rules via", "Web UI, REST API")
+Rel(admin, geoserverCore, "Configures via", "Web UI, REST API")
+
+Rel(geoserverCore, aclPlugin, "Delegates authorization to")
+Rel(aclPlugin, aclService, "Requests authorization decisions from", "REST API")
+Rel(aclService, aclDb, "Stores and retrieves rules from", "JPA/JDBC")
+Rel(geoserverCore, authSystem, "Authenticates users with", "Various protocols")
+Rel(geoserverCore, spatialDb, "Retrieves data from", "JDBC, OGC")
+
+@enduml
+....
+
+=== Technical Interfaces
+
+[cols="1,4,2,4a"]
+|===
+|Interface |Description |Protocol |Details
+
+|ACL Service REST API
+|API for rule management and authorization decisions
+|HTTP/REST
+|* Endpoints:
+** Rule management (CRUD)
+** Authorization requests
+** Administrative operations
+* Authentication: 
+** Basic auth
+** JWT/OAuth2 tokens
+* Data format: JSON
+
+|GeoServer Plugin Interface
+|Integration with GeoServer security framework
+|Java API
+|* Security filter integration
+* Catalog listener for resource events
+* Request interceptor for OGC services
+* Implements ResourceAccessManager interface
+
+|Database Connection
+|Storage for rule definitions
+|JDBC
+|* JPA entities for rules
+* Transaction management
+* Connection pooling
+* Schema migration via Flyway
+|===
+
+== Domain Context
+
+=== Core Domain Concepts
+
+[plantuml, domain-context, svg]
+....
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Component(adminRule, "Admin Rule", "", "Controls administrative access to GeoServer resources")
+Component(accessRule, "Access Rule", "", "Controls data access to geospatial resources")
+Component(layerDetails, "Layer Details", "", "Specific access settings for a layer")
+Component(ruleFilter, "Rule Filter", "", "Criteria for matching rules to requests")
+Component(authRequest, "Authorization Request", "", "Details of the access being authorized")
+Component(authResponse, "Authorization Response", "", "Decision and limitations for access")
+
+Rel(accessRule, layerDetails, "May include")
+Rel(ruleFilter, adminRule, "Matches")
+Rel(ruleFilter, accessRule, "Matches")
+Rel(authRequest, ruleFilter, "Converted to")
+Rel(authResponse, layerDetails, "Includes limitations from")
+
+@enduml
+....
+
+=== Domain Interfaces
+
+[cols="1,4,4a"]
+|===
+|Domain Interface |Purpose |Key Operations
+
+|Rule Management
+|Manage the definition and storage of access rules
+|* Create, read, update, delete rules
+* Search and filter rules
+* Import/export rule sets
+* Validate rule consistency
+
+|Authorization
+|Determine if access to a resource is permitted
+|* Check if a user can access a resource
+* Determine spatial limitations
+* Determine attribute limitations
+* Apply rule priorities
+* Cache authorization decisions
+
+|GeoServer Integration
+|Connect authorization decisions to GeoServer
+|* Intercept OGC service requests
+* Filter catalog resources
+* Apply data access restrictions
+* Apply administrative access restrictions
+|===

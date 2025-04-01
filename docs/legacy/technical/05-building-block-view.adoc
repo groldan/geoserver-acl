@@ -1,0 +1,299 @@
+---
+title: "Building Block View"
+layout: asciidoc
+collection: technical
+---
+= Building Block View
+:imagesdir: images
+:toc: left
+:sectnums:
+
+== Level 1: System Context Whitebox
+
+=== System Decomposition
+
+GeoServer ACL consists of two main components that work together to provide authorization services for GeoServer:
+
+[plantuml, system-whitebox, svg]
+....
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(admin, "GeoServer Admin", "Defines access rules")
+Person(user, "End User", "Accesses geospatial data")
+
+System_Boundary(aclSystem, "GeoServer ACL") {
+    Container(aclService, "ACL Service", "Spring Boot", "Rule management and authorization decisions")
+    Container(geoserverPlugin, "GeoServer ACL Plugin", "Java", "Enforces authorization in GeoServer")
+}
+
+System_Ext(geoserver, "GeoServer", "OGC-compliant geospatial server")
+
+Rel(admin, aclService, "Manages rules", "REST API")
+Rel(user, geoserver, "Requests data", "OGC Services")
+Rel(geoserver, geoserverPlugin, "Uses")
+Rel(geoserverPlugin, aclService, "Requests authorization", "REST API")
+
+@enduml
+....
+
+=== Components
+
+[cols="1,4,4a"]
+|===
+|Component |Responsibility |Interfaces
+
+|ACL Service
+|Standalone application that manages access rules and provides authorization decisions
+|* REST API for rule management
+* REST API for authorization decisions
+* Database interface for persistence
+
+|GeoServer ACL Plugin
+|GeoServer extension that integrates with GeoServer's security subsystem and enforces access rules
+|* GeoServer ResourceAccessManager implementation
+* OWS Service request filters
+* Administrative UI extensions
+|===
+
+== Level 2: Container View
+
+=== ACL Service
+
+[plantuml, acl-service-containers, svg]
+....
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Container_Boundary(aclService, "ACL Service") {
+    Component(restAPI, "REST API", "Spring MVC, OpenAPI", "Exposes rule management and authorization endpoints")
+    Component(domainServices, "Domain Services", "Java", "Core business logic for rule management and authorization")
+    Component(dataAccess, "Data Access Layer", "JPA, Spring Data", "Persistence for rules")
+}
+
+ContainerDb(database, "Database", "PostgreSQL/H2", "Stores rule definitions")
+
+Rel(restAPI, domainServices, "Uses")
+Rel(domainServices, dataAccess, "Uses")
+Rel(dataAccess, database, "Reads/writes")
+
+@enduml
+....
+
+=== GeoServer ACL Plugin
+
+[plantuml, geoserver-plugin-containers, svg]
+....
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Container_Boundary(geoserverPlugin, "GeoServer ACL Plugin") {
+    Component(resourceManager, "ACL Resource Manager", "Java", "Main integration point with GeoServer security")
+    Component(clientAdaptor, "Client Adaptor", "Java", "Communicates with ACL Service")
+    Component(webUI, "Web UI", "Java, Wicket", "Administrative interface for ACL configuration")
+}
+
+System_Ext(geoserver, "GeoServer", "")
+System_Ext(aclService, "ACL Service", "")
+
+Rel(geoserver, resourceManager, "Uses")
+Rel(resourceManager, clientAdaptor, "Uses")
+Rel(clientAdaptor, aclService, "Requests authorization from", "REST")
+Rel(webUI, clientAdaptor, "Uses")
+
+@enduml
+....
+
+== Level 3: Component View
+
+=== Domain Services
+
+The core domain services implement the business logic for managing rules and making authorization decisions.
+
+[plantuml, domain-services, svg]
+....
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Component_Boundary(domainServices, "Domain Services") {
+    Component(adminRuleService, "Admin Rule Service", "", "Manages administrative access rules")
+    Component(accessRuleService, "Access Rule Service", "", "Manages data access rules")
+    Component(authorizationService, "Authorization Service", "", "Determines access permissions")
+    Component(cacheManager, "Cache Manager", "", "Caches authorization decisions")
+}
+
+Rel(authorizationService, adminRuleService, "Uses")
+Rel(authorizationService, accessRuleService, "Uses")
+Rel(authorizationService, cacheManager, "Uses")
+
+@enduml
+....
+
+=== REST API
+
+The REST API layer exposes the domain services through HTTP endpoints.
+
+[plantuml, rest-api, svg]
+....
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Component_Boundary(restAPI, "REST API") {
+    Component(adminRulesEndpoint, "Admin Rules Endpoint", "Spring MVC", "CRUD operations for admin rules")
+    Component(accessRulesEndpoint, "Access Rules Endpoint", "Spring MVC", "CRUD operations for access rules")
+    Component(authorizationEndpoint, "Authorization Endpoint", "Spring MVC", "Authorization decision requests")
+    Component(modelMapper, "Model Mapper", "", "Maps between API DTOs and domain objects")
+}
+
+Component_Ext(domainServices, "Domain Services", "")
+
+Rel(adminRulesEndpoint, modelMapper, "Uses")
+Rel(accessRulesEndpoint, modelMapper, "Uses")
+Rel(authorizationEndpoint, modelMapper, "Uses")
+Rel(modelMapper, domainServices, "Translates to/from")
+
+@enduml
+....
+
+=== Data Access Layer
+
+The data access layer handles persistence of rules to the database.
+
+[plantuml, data-access, svg]
+....
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Component_Boundary(dataAccess, "Data Access Layer") {
+    Component(adminRuleRepository, "Admin Rule Repository", "JPA", "CRUD operations for admin rules")
+    Component(accessRuleRepository, "Access Rule Repository", "JPA", "CRUD operations for access rules")
+    Component(layerDetailsRepository, "Layer Details Repository", "JPA", "Storage for layer-specific settings")
+    Component(transactionManager, "Transaction Manager", "Spring", "Manages database transactions")
+}
+
+ContainerDb_Ext(database, "Database", "")
+
+Rel(adminRuleRepository, database, "Reads/writes")
+Rel(accessRuleRepository, database, "Reads/writes")
+Rel(layerDetailsRepository, database, "Reads/writes")
+Rel(transactionManager, adminRuleRepository, "Coordinates")
+Rel(transactionManager, accessRuleRepository, "Coordinates")
+Rel(transactionManager, layerDetailsRepository, "Coordinates")
+
+@enduml
+....
+
+=== GeoServer Integration Components
+
+The GeoServer plugin components integrate with GeoServer's security framework.
+
+[plantuml, geoserver-integration, svg]
+....
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Component_Boundary(geoserverIntegration, "GeoServer Integration") {
+    Component(resourceAccessManager, "ACL Resource Access Manager", "", "Implements GeoServer ResourceAccessManager")
+    Component(catalogFilterBuilder, "Catalog Filter Builder", "", "Creates filters for catalog resources")
+    Component(dataAccessLimits, "Data Access Limits", "", "Applies limits to feature data")
+    Component(requestBuilder, "Request Builder", "", "Converts GeoServer requests to ACL requests")
+}
+
+Component_Ext(geoserverSecurity, "GeoServer Security Framework", "")
+Component_Ext(clientAdaptor, "Client Adaptor", "")
+
+Rel(geoserverSecurity, resourceAccessManager, "Uses")
+Rel(resourceAccessManager, catalogFilterBuilder, "Uses")
+Rel(resourceAccessManager, dataAccessLimits, "Uses")
+Rel(resourceAccessManager, requestBuilder, "Uses")
+Rel(resourceAccessManager, clientAdaptor, "Uses")
+
+@enduml
+....
+
+== Important Interfaces
+
+=== Domain Service Interfaces
+
+The domain service interfaces define the core functionality of the ACL system.
+
+[source,java]
+----
+public interface RuleAdminService {
+    /** Rule management operations */
+    Rule get(String id);
+    Rule insert(Rule rule);
+    Rule update(Rule rule);
+    boolean delete(String id);
+    
+    /** Rule querying operations */
+    Stream<Rule> getAll();
+    Stream<Rule> getAll(RuleFilter filter, Integer page, Integer size);
+    long count(RuleFilter filter);
+    /** ... */
+}
+
+public interface AuthorizationService {
+    /** Authorization decision operations */
+    AccessInfo getAccessInfo(AccessRequest request);
+    AccessInfo getWorkspaceAccessInfo(WorkspaceAccessRequest request);
+    AdminAccessInfo getAdminAuthorization(AdminAccessRequest request);
+    /** ... */
+}
+----
+
+=== REST API Interfaces
+
+The REST API is defined using OpenAPI and exposes endpoints for rule management and authorization.
+
+[source,yaml]
+----
+paths:
+  /rules:
+    get:
+      summary: List all rules
+      # ...
+    post:
+      summary: Create a new rule
+      # ...
+  /rules/{id}:
+    get:
+      summary: Get a rule by ID
+      # ...
+    put:
+      summary: Update a rule
+      # ...
+    delete:
+      summary: Delete a rule
+      # ...
+  /authorize:
+    post:
+      summary: Get authorization decision
+      # ...
+----
+
+=== GeoServer Plugin Interfaces
+
+The GeoServer plugin implements GeoServer's security interfaces to enforce access control.
+
+[source,java]
+----
+public class ACLResourceAccessManager implements ResourceAccessManager {
+    @Override
+    public WorkspaceAccessLimits getAccessLimits(Authentication user, WorkspaceInfo workspace) {
+        // Request workspace access decision from ACL service
+    }
+    
+    @Override
+    public LayerGroupAccessLimits getAccessLimits(Authentication user, LayerGroupInfo layerGroup) {
+        // Request layer group access decision from ACL service
+    }
+    
+    @Override
+    public DataAccessLimits getAccessLimits(Authentication user, LayerInfo layer) {
+        // Request layer access decision from ACL service
+    }
+    
+    // Other ResourceAccessManager methods...
+}
+----

@@ -1,0 +1,105 @@
+---
+layout: default
+title: Technical Documentation
+nav_order: 4
+has_children: true
+permalink: /technical/
+---
+= GeoServer ACL Technical Documentation
+:toc: left
+:sectnums:
+:imagesdir: images
+:icons: font
+
+== Introduction
+
+This is the technical documentation for GeoServer ACL, following the arc42 documentation template. It provides comprehensive information about the architecture, design decisions, and technical aspects of the system.
+
+== Documentation Structure
+
+The documentation is organized according to the arc42 template structure:
+
+[cols="1,4"]
+|===
+|Section |Description
+
+|link:01-introduction-and-goals.html[1. Introduction and Goals]
+|Introduction to the system, requirements overview, and quality goals
+
+|link:02-architecture-constraints.html[2. Architecture Constraints]
+|Technical, organizational, and conventional constraints that affect the architecture
+
+|link:03-system-scope-and-context.html[3. System Scope and Context]
+|Business and technical context of the system and its interactions
+
+|link:04-solution-strategy.html[4. Solution Strategy]
+|Fundamental strategic decisions for the architectural solution
+
+|link:05-building-block-view.html[5. Building Block View]
+|Static decomposition of the system into building blocks
+
+|link:06-runtime-view.html[6. Runtime View]
+|Dynamic behavior and interactions between components
+
+|link:07-deployment-view.html[7. Deployment View]
+|Technical infrastructure and deployment scenarios
+
+|link:08-cross-cutting-concepts.html[8. Cross-cutting Concepts]
+|Concepts that affect multiple parts of the system
+
+|link:09-architecture-decisions.html[9. Architecture Decisions]
+|Important architectural decisions and their rationale
+
+|link:10-quality-requirements.html[10. Quality Requirements]
+|Quality scenarios and requirements
+
+|link:11-risks.html[11. Technical Risks and Technical Debt]
+|Risks, technical debt, and improvement opportunities
+
+|link:12-glossary.html[12. Glossary]
+|Definition of technical terms and acronyms
+|===
+
+== Purpose
+
+This technical documentation serves multiple purposes:
+
+* Provides a comprehensive overview of the GeoServer ACL architecture
+* Documents design decisions and their rationale
+* Serves as a reference for developers working on the codebase
+* Helps new team members understand the system
+* Supports maintenance and future development
+
+== Audience
+
+This documentation is intended for:
+
+* Software developers working on GeoServer ACL
+* System administrators deploying and maintaining the system
+* Technical decision-makers evaluating the solution
+* Contributors to the open-source project
+
+== Related Documentation
+
+* link:../users-guide/index.html[User's Guide] - For administrators and users of GeoServer ACL
+* link:../developers-guide/index.html[Developer's Guide] - For developers working with the codebase
+* link:../api/index.html[API Documentation] - Reference for the REST API
+
+== How to Use This Documentation
+
+* **New to the project?** Start with Introduction and Goals, then System Scope and Context
+* **Looking for design rationale?** See Architecture Decisions and Solution Strategy
+* **Planning a deployment?** Focus on Deployment View and Quality Requirements
+* **Contributing code?** Read Building Block View, Cross-cutting Concepts, and the Developer's Guide
+
+== Diagrams and Notation
+
+This documentation uses several diagram types:
+
+* **Context diagrams** - Show the system in its environment
+* **Container diagrams** - Show the high-level technology choices
+* **Component diagrams** - Show the internal components
+* **Sequence diagrams** - Show the dynamic behavior
+* **Deployment diagrams** - Show infrastructure and deployment options
+
+The diagrams follow the C4 model notation where applicable, and are generated from PlantUML source embedded in the documentation.

@@ -1,0 +1,71 @@
+---
+title: "Architecture Constraints"
+layout: asciidoc
+collection: technical
+---
+= Architecture Constraints
+:imagesdir: images
+:toc: left
+:sectnums:
+
+This section describes constraints that apply to the architecture and design of GeoServer ACL.
+
+== Technical Constraints
+
+[cols="1,4"]
+|===
+|Constraint |Description
+
+|Java Version
+|Must be compatible with Java 11+, with Java 17 recommended for service components
+
+|GeoServer Compatibility
+|Must integrate with GeoServer 2.19.x and newer
+
+|REST API Style
+|Must follow OpenAPI 3.0 specification for all REST endpoints
+
+|Database Support
+|Must support both PostgreSQL (with PostGIS extension) and H2 (for testing)
+
+|Maven Build
+|Must use Maven for build management and dependency resolution
+|===
+
+== Organizational Constraints
+
+[cols="1,4"]
+|===
+|Constraint |Description
+
+|Open Source License
+|Must be released under an open source license compatible with GeoServer
+
+|Community Governance
+|Must follow GeoServer community processes for contributions
+
+|Documentation
+|Must include user documentation, developer guide, and architecture documentation
+
+|Backwards Compatibility
+|Must maintain compatibility with existing GeoFence deployments where possible
+|===
+
+== Conventional Constraints
+
+[cols="1,4"]
+|===
+|Constraint |Description
+
+|API-First Design
+|API contracts must be defined first, then implementations
+
+|Domain-Driven Design
+|Must follow domain-driven design principles with bounded contexts
+
+|Loose Coupling
+|System components should be loosely coupled to allow for independent evolution
+
+|Test Coverage
+|New code must have adequate test coverage (unit and integration tests)
+|===

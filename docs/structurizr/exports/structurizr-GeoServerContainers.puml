@@ -1,0 +1,26 @@
+@startuml
+set separator none
+title Container diagram for GeoServer with ACL Plugin
+
+top to bottom direction
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+
+System(GeoServerACL, "GeoServer ACL", $descr="Advanced authorization system for GeoServer", $tags="", $link="")
+
+System_Boundary("GeoServer_boundary", "GeoServer", $tags="") {
+  Container(GeoServer.GeoServerCore, "GeoServer Core", $techn="", $descr="Core GeoServer functionality", $tags="", $link="")
+  Container(GeoServer.GeoServerDataDirectory, "GeoServer Data Directory", $techn="", $descr="Configuration and data files", $tags="", $link="")
+  Container(GeoServer.GeoServerAdminUI, "GeoServer Admin UI", $techn="", $descr="Web interface for GeoServer administration", $tags="", $link="")
+  Container(GeoServer.ACLPlugin, "ACL Plugin", $techn="", $descr="Integrates GeoServer with ACL Service", $tags="", $link="")
+}
+
+Rel(GeoServer.GeoServerAdminUI, GeoServer.GeoServerCore, "Administers", $techn="", $tags="", $link="")
+Rel(GeoServer.GeoServerCore, GeoServer.GeoServerDataDirectory, "Reads from and writes to", $techn="", $tags="", $link="")
+Rel(GeoServer.GeoServerCore, GeoServer.ACLPlugin, "Uses for authorization", $techn="", $tags="", $link="")
+Rel(GeoServer.ACLPlugin, GeoServerACL, "Makes API calls to", $techn="", $tags="", $link="")
+
+SHOW_LEGEND(true)
+@enduml

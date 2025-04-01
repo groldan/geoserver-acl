@@ -1,0 +1,233 @@
+name: Release Process
+
+on:
+  workflow_dispatch:
+    inputs:
+      releaseVersion:
+        description: 'Release version (e.g., 1.2.3)'
+        required: true
+      nextDevelopmentVersion:
+        description: 'Next development version (e.g., 1.2.4-SNAPSHOT)'
+        required: true
+      dryRun:
+        description: 'Dry run only (no commits or pushes)'
+        type: boolean
+        default: true
+      skipTests:
+        description: 'Skip running tests'
+        type: boolean
+        default: false
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Get all history for changelog generation
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Validate environment
+        run: |
+          echo "Release version: ${{ github.event.inputs.releaseVersion }}"
+          echo "Next development version: ${{ github.event.inputs.nextDevelopmentVersion }}"
+          echo "Dry run: ${{ github.event.inputs.dryRun }}"
+          echo "Skip tests: ${{ github.event.inputs.skipTests }}"
+          
+          # Ensure release version is not a SNAPSHOT
+          if [[ "${{ github.event.inputs.releaseVersion }}" == *-SNAPSHOT ]]; then
+            echo "::error::Release version cannot be a SNAPSHOT version"
+            exit 1
+          fi
+          
+          # Ensure next version is a SNAPSHOT
+          if [[ "${{ github.event.inputs.nextDevelopmentVersion }}" != *-SNAPSHOT ]]; then
+            echo "::error::Next development version must be a SNAPSHOT version"
+            exit 1
+          fi
+
+      - name: Verify build and tests
+        if: ${{ github.event.inputs.skipTests != 'true' }}
+        run: |
+          ./mvnw clean verify -DskipTests=false -ntp -T4
+
+      - name: Run quality checks
+        run: |
+          ./mvnw sortpom:verify fmt:check -ntp
+
+      - name: Set release version
+        id: set_version
+        run: |
+          # Get current version
+          CURRENT_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "Current version: $CURRENT_VERSION"
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          
+          # Set release version
+          ./mvnw versions:set -DnewVersion=${{ github.event.inputs.releaseVersion }} -DgenerateBackupPoms=false
+          
+          # Update version references in documentation
+          find docs -type f -name "*.md" -exec sed -i "s/$CURRENT_VERSION/${{ github.event.inputs.releaseVersion }}/g" {} \;
+          
+          echo "Version updated to ${{ github.event.inputs.releaseVersion }}"
+
+      - name: Commit release version
+        if: ${{ github.event.inputs.dryRun != 'true' }}
+        run: |
+          git add -A
+          git commit -m "Release ${{ github.event.inputs.releaseVersion }}"
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # Extract version and generate changelog from commits between tags
+          PREVIOUS_TAG=$(git describe --abbrev=0 --tags 2>/dev/null || echo "")
+          
+          if [ -z "$PREVIOUS_TAG" ]; then
+            # If no previous tag exists, use all commits
+            git log --pretty=format:"- %s (%an)" > RELEASE_NOTES.md
+          else
+            # Otherwise use commits since last tag
+            git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%an)" > RELEASE_NOTES.md
+          fi
+          
+          # Organize the notes by type
+          {
+            echo "# GeoServer ACL ${{ github.event.inputs.releaseVersion }}"
+            echo ""
+            echo "## New Features"
+            grep -i '\- feat' RELEASE_NOTES.md || echo "- No new features"
+            echo ""
+            echo "## Bug Fixes"
+            grep -i '\- fix' RELEASE_NOTES.md || echo "- No bug fixes"
+            echo ""
+            echo "## Improvements"
+            grep -i '\- improve\|\- refactor\|\- perf' RELEASE_NOTES.md || echo "- No improvements"
+            echo ""
+            echo "## Documentation"
+            grep -i '\- docs' RELEASE_NOTES.md || echo "- No documentation changes"
+            echo ""
+            echo "## Other Changes"
+            grep -v '\- feat\|\- fix\|\- improve\|\- refactor\|\- perf\|\- docs' RELEASE_NOTES.md | grep '\-' || echo "- No other changes"
+          } > FORMATTED_RELEASE_NOTES.md
+          
+          # Set the release notes as an output that can be used by later steps
+          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+          cat FORMATTED_RELEASE_NOTES.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create release tag
+        if: ${{ github.event.inputs.dryRun != 'true' }}
+        run: |
+          git tag -a v${{ github.event.inputs.releaseVersion }} -m "Release ${{ github.event.inputs.releaseVersion }}"
+
+      - name: Build the release
+        run: |
+          MAVEN_OPTS="-Xmx3g" ./mvnw clean install -DskipTests=${{ github.event.inputs.skipTests }}
+
+      - name: Deploy to Maven Central
+        if: ${{ github.event.inputs.dryRun != 'true' }}
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          ./mvnw deploy -DskipTests=true -P release -ntp
+        
+      - name: Set next development version
+        run: |
+          ./mvnw versions:set -DnewVersion=${{ github.event.inputs.nextDevelopmentVersion }} -DgenerateBackupPoms=false
+
+      - name: Commit next development version
+        if: ${{ github.event.inputs.dryRun != 'true' }}
+        run: |
+          git add -A
+          git commit -m "Prepare for next development version ${{ github.event.inputs.nextDevelopmentVersion }}"
+
+      - name: Push changes and tag
+        if: ${{ github.event.inputs.dryRun != 'true' }}
+        run: |
+          git push origin HEAD
+          git push origin v${{ github.event.inputs.releaseVersion }}
+
+      - name: Create GitHub Release
+        if: ${{ github.event.inputs.dryRun != 'true' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.event.inputs.releaseVersion }}
+          name: GeoServer ACL ${{ github.event.inputs.releaseVersion }}
+          body: ${{ steps.release_notes.outputs.release_notes }}
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/api/target/geoserver-acl-*.jar
+            target/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-and-push-docker:
+    needs: prepare-release
+    if: ${{ github.event.inputs.dryRun != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: v${{ github.event.inputs.releaseVersion }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push API Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./artifacts/api
+          push: true
+          tags: |
+            geoserver/geoserver-acl:${{ github.event.inputs.releaseVersion }}
+            geoserver/geoserver-acl:latest
+
+      - name: Update documentation website
+        if: ${{ github.event.inputs.dryRun != 'true' }}
+        run: |
+          git checkout -b docs-update
+          
+          # Update version references in documentation
+          sed -i 's/latest development version/version ${{ github.event.inputs.releaseVersion }}/g' docs/index.md
+          find docs -type f -name "*.md" -exec sed -i "s/\`[0-9]\+\.[0-9]\+\.[0-9]\+\`/\`${{ github.event.inputs.releaseVersion }}\`/g" {} \;
+          
+          # Build docs using MkDocs
+          python -m pip install -r docs/requirements.txt
+          mkdocs build
+          
+          git add -A
+          git commit -m "Update documentation for release ${{ github.event.inputs.releaseVersion }}"
+          git push origin docs-update
+          
+          # Create a PR for documentation updates
+          gh pr create --base main --head docs-update --title "Update docs for release ${{ github.event.inputs.releaseVersion }}" --body "Automated documentation updates for release ${{ github.event.inputs.releaseVersion }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

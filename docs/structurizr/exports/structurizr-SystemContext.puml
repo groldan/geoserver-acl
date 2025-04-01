@@ -1,0 +1,21 @@
+@startuml
+set separator none
+title System Context diagram for GeoServer ACL
+
+top to bottom direction
+
+!include <C4/C4>
+!include <C4/C4_Context>
+
+System(GeoServer, "GeoServer", $descr="OGC-compliant server for sharing geospatial data", $tags="", $link="")
+Person(GeoServerAdministrator, "GeoServer Administrator", $descr="Configures and manages GeoServer and ACL rules", $tags="", $link="")
+Person(SystemIntegrator, "System Integrator", $descr="Integrates with GeoServer ACL through API", $tags="", $link="")
+System(GeoServerACL, "GeoServer ACL", $descr="Advanced authorization system for GeoServer", $tags="", $link="")
+
+Rel(GeoServerAdministrator, GeoServer, "Configures", $techn="", $tags="", $link="")
+Rel(GeoServerAdministrator, GeoServerACL, "Manages rules in", $techn="", $tags="", $link="")
+Rel(SystemIntegrator, GeoServerACL, "Integrates with", $techn="", $tags="", $link="")
+Rel(GeoServer, GeoServerACL, "Authorizes requests through", $techn="", $tags="", $link="")
+
+SHOW_LEGEND(true)
+@enduml

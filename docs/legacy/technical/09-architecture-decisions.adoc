@@ -1,0 +1,218 @@
+---
+title: "Architecture Decisions"
+layout: asciidoc
+collection: technical
+---
+= Architecture Decisions
+:imagesdir: images
+:toc: left
+:sectnums:
+
+== Introduction
+
+This section documents the key architectural decisions made during the development of GeoServer ACL. Each decision is recorded as an Architectural Decision Record (ADR) to provide context on why a particular approach was chosen.
+
+== ADR-001: Standalone Service Architecture
+
+=== Context
+
+The original GeoFence project was implemented as a GeoServer extension that could be configured to use either an embedded or remote service for rule management. This created dependencies and deployment complexity.
+
+=== Decision
+
+GeoServer ACL is designed as a completely independent service with the following components:
+
+1. A standalone Spring Boot application that provides rule management and authorization services
+2. A GeoServer plugin that communicates with the service via REST API
+
+=== Consequences
+
+* **Positive**:
+** Clear separation of concerns
+** Independent scaling of the authorization service
+** Easier to maintain and evolve independently from GeoServer
+** Multiple GeoServer instances can share the same ACL service
+* **Negative**:
+** Additional deployment component to manage
+** Network communication adds latency
+** Need to manage API compatibility between service and plugin
+
+== ADR-002: Domain-Driven Design Approach
+
+=== Context
+
+The GeoServer ACL codebase requires clear boundaries and well-defined responsibilities to ensure maintainability and extensibility.
+
+=== Decision
+
+Implement the system following Domain-Driven Design principles:
+
+1. Clearly defined bounded contexts (rule management, authorization, integration)
+2. Rich domain models with business logic encapsulation
+3. Repository pattern for data access
+4. Service layer for orchestration
+5. Separation of domain logic from infrastructure concerns
+
+=== Consequences
+
+* **Positive**:
+** Clearer code organization
+** Better testability
+** Domain logic isolated from technical details
+** Easier to understand and extend
+* **Negative**:
+** More classes and interfaces
+** Learning curve for developers familiar with simpler architectures
+
+== ADR-003: REST API for Integration
+
+=== Context
+
+GeoServer and the ACL service need to communicate in a technology-agnostic way that supports different deployment scenarios.
+
+=== Decision
+
+Use a REST API with OpenAPI specification for all interactions between GeoServer and the ACL service:
+
+1. Define a clear API contract using OpenAPI 3.0
+2. Generate client and server code from the specification
+3. JSON for data exchange
+
+=== Consequences
+
+* **Positive**:
+** Technology-agnostic integration
+** Well-documented API
+** Potential for alternative clients (JavaScript, Python)
+** Explicit versioning
+* **Negative**:
+** Serialization/deserialization overhead
+** Network latency
+** More complex error handling
+
+== ADR-004: JPA for Persistence
+
+=== Context
+
+The rule storage requires a reliable persistence mechanism with support for transactions and complex queries.
+
+=== Decision
+
+Use JPA (Hibernate implementation) for data persistence:
+
+1. Domain entities mapped to database tables
+2. Spring Data repositories for common data access patterns
+3. Support for multiple database vendors (H2, PostgreSQL)
+
+=== Consequences
+
+* **Positive**:
+** Database vendor independence
+** Transaction support
+** Familiar ORM approach
+** Integration with Spring ecosystem
+* **Negative**:
+** Performance overhead compared to raw SQL
+** Entity-relationship impedance mismatch
+** Learning curve for JPA-specific features
+
+== ADR-005: Caching for Performance
+
+=== Context
+
+Authorization decisions are frequently requested and can be computationally expensive, especially with complex rule sets.
+
+=== Decision
+
+Implement a multi-level caching strategy:
+
+1. In-memory rule cache in the authorization service
+2. Authorization decision cache keyed by request properties
+3. Optional distributed cache for clustered deployments
+4. Cache invalidation on rule changes
+
+=== Consequences
+
+* **Positive**:
+** Significant performance improvement for repeated authorization requests
+** Reduced database load
+** Scalable in distributed environments
+* **Negative**:
+** Cache consistency challenges
+** Memory consumption
+** Complexity in invalidation logic
+
+== ADR-006: Event-Based Communication for Rule Changes
+
+=== Context
+
+When rules are modified in the ACL service, any cached authorization decisions may become invalid.
+
+=== Decision
+
+Use an event-based approach for propagating rule changes:
+
+1. Spring Application Events for local notification
+2. Optional Spring Cloud Bus for distributed deployments
+3. Event-driven cache invalidation
+
+=== Consequences
+
+* **Positive**:
+** Loose coupling between components
+** Scalable to distributed environments
+** Extensible for future event types
+* **Negative**:
+** More complex than direct method calls
+** Event handling adds complexity
+** Potential for missed events in distributed scenarios
+
+== ADR-007: Wicket-Based Admin UI
+
+=== Context
+
+GeoServer uses Apache Wicket for its administrative interface, and the ACL plugin needs to integrate seamlessly.
+
+=== Decision
+
+Implement the GeoServer plugin's administrative UI using Apache Wicket:
+
+1. Reuse GeoServer Wicket components where possible
+2. Consistent styling with the rest of GeoServer admin
+3. Integration with GeoServer security system
+
+=== Consequences
+
+* **Positive**:
+** Consistent UI experience for administrators
+** Reuse of existing GeoServer patterns
+** Integration with GeoServer security
+* **Negative**:
+** Dependency on Wicket version used by GeoServer
+** Limited flexibility in UI technology choices
+** Wicket learning curve for new developers
+
+== ADR-008: Spatial Database Support
+
+=== Context
+
+GeoServer ACL needs to support spatial filtering, which requires storage and querying of geometric data.
+
+=== Decision
+
+Leverage spatial database capabilities:
+
+1. Support for PostGIS for production deployments
+2. JTS for in-memory geometry operations
+3. Abstraction layer to handle database-specific spatial operations
+
+=== Consequences
+
+* **Positive**:
+** Efficient spatial operations using database capabilities
+** Support for complex spatial filters
+** Consistent with GeoServer's approach to spatial data
+* **Negative**:
+** Dependency on spatial database extensions
+** More complex deployment requirements
+** Potential performance impact of spatial operations

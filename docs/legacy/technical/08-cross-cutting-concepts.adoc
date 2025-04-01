@@ -1,0 +1,263 @@
+---
+title: "Cross-cutting Concepts"
+layout: asciidoc
+collection: technical
+---
+= Cross-cutting Concepts
+:imagesdir: images
+:toc: left
+:sectnums:
+
+== Introduction
+
+This section describes concepts that are relevant to multiple parts of the GeoServer ACL architecture. These cross-cutting concerns affect the entire system and require consistent approaches across all components.
+
+== Domain Model
+
+=== Immutability Pattern
+
+GeoServer ACL uses immutable domain objects to ensure thread safety and simplify reasoning about the system's state:
+
+* All domain objects are immutable after construction
+* Changes are represented by creating new instances
+* Builder pattern is used for object creation
+* Value objects are preferred over entities where appropriate
+
+This approach reduces the risk of side effects and makes the system more predictable, especially in a concurrent environment.
+
+=== Domain Events
+
+Domain events represent significant state changes and are used for communication between bounded contexts:
+
+* Events are immutable value objects
+* Events are published when domain state changes
+* Event handlers react to events and may trigger further actions
+* Events provide a history of domain changes
+
+Example domain events:
+
+* `RuleCreatedEvent`
+* `RuleUpdatedEvent`
+* `RuleDeletedEvent`
+* `AdminRuleChangedEvent`
+
+== Persistence Concepts
+
+=== Repository Pattern
+
+GeoServer ACL uses the repository pattern to abstract data storage and retrieval:
+
+* Repositories provide collection-like interfaces for domain objects
+* Implementation details are hidden behind repository interfaces
+* Domain objects are translated to and from persistence models
+* Transaction boundaries are defined at the service level
+
+This pattern allows for different persistence implementations (JPA, in-memory, etc.) while keeping the domain model clean.
+
+=== Database Schema Evolution
+
+Database schema changes are managed through:
+
+* JPA entity mapping for table structure
+* Flyway migrations for schema evolution
+* Separation of database schema from domain model
+* Backwards compatibility considerations
+
+== Security Concepts
+
+=== Authentication vs. Authorization
+
+GeoServer ACL is focused on authorization, not authentication:
+
+* Authentication (who you are) is handled by GeoServer
+* Authorization (what you can do) is handled by ACL
+* ACL trusts the authenticated identity from GeoServer
+* ACL makes decisions based on identities and rule matching
+
+=== Defense in Depth
+
+Security is implemented at multiple layers:
+
+* Transport security (HTTPS)
+* API authentication and authorization
+* Domain-level validation and authorization
+* Persistence-level access controls
+* Principle of least privilege throughout
+
+== Architecture Patterns
+
+=== Hexagonal Architecture
+
+The hexagonal architecture pattern (also known as ports and adapters) is used to isolate the domain core:
+
+[plantuml, hexagonal-architecture, svg]
+....
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(admin, "Administrator")
+Person(user, "User")
+
+System_Boundary(acl, "GeoServer ACL") {
+    Container_Boundary(domain, "Domain Core") {
+        Component(ruleServices, "Rule Services")
+        Component(authzServices, "Authorization Services")
+        Component(domainModel, "Domain Model")
+    }
+    
+    Container_Boundary(adapters_in, "Input Adapters") {
+        Component(restAPI, "REST API")
+        Component(pluginAPI, "GeoServer Plugin API")
+    }
+    
+    Container_Boundary(adapters_out, "Output Adapters") {
+        Component(persistence, "Persistence")
+        Component(events, "Event System")
+    }
+}
+
+System_Ext(geoserver, "GeoServer")
+SystemDb_Ext(database, "Database")
+
+admin --> restAPI
+user --> geoserver
+geoserver --> pluginAPI
+
+restAPI --> ruleServices
+pluginAPI --> authzServices
+ruleServices --> domainModel
+authzServices --> domainModel
+
+ruleServices --> events
+authzServices --> events
+ruleServices --> persistence
+authzServices --> persistence
+
+persistence --> database
+events --> events
+
+@enduml
+....
+
+Key aspects:
+
+* Core domain is independent of external concerns
+* Adapters translate between domain and external systems
+* Ports define the interfaces for adapters
+* Domain logic is isolated from infrastructure details
+
+=== CQRS-Lite
+
+While not implementing full Command Query Responsibility Segregation, GeoServer ACL separates operations:
+
+* Command operations modify state (create, update, delete rules)
+* Query operations read state (find rules, get authorization decisions)
+* Different optimization strategies for commands vs. queries
+* Separate models for write and read operations where appropriate
+
+== Caching Concepts
+
+=== Multi-level Caching
+
+Caching is implemented at multiple levels for performance:
+
+[plantuml, caching-levels, svg]
+....
+@startuml
+actor User
+participant "GeoServer" as GS
+participant "Plugin Cache" as PC
+participant "ACL Service" as ACL
+participant "Rule Cache" as RC
+database "Database" as DB
+
+User -> GS: Request
+GS -> PC: Check cache
+alt Cache hit
+    PC --> GS: Cached decision
+else Cache miss
+    PC --> GS: Not in cache
+    GS -> ACL: Authorization request
+    ACL -> RC: Check rule cache
+    alt Cache hit
+        RC --> ACL: Cached rules
+    else Cache miss
+        RC --> ACL: Not in cache
+        ACL -> DB: Query rules
+        DB --> ACL: Rules
+        ACL -> RC: Cache rules
+    end
+    ACL -> ACL: Evaluate rules
+    ACL --> GS: Authorization decision
+    GS -> PC: Cache decision
+end
+GS --> User: Response
+@enduml
+....
+
+Key caching levels:
+
+* Plugin-level decision cache
+* Service-level rule cache
+* Database-level query cache
+* HTTP-level response cache (for rule management)
+
+=== Cache Invalidation
+
+Cache invalidation is critical for maintaining consistency:
+
+* Event-driven invalidation on rule changes
+* Time-based expiration for cached decisions
+* Selective invalidation based on affected resources
+* Cache invalidation messages distributed across instances
+
+== Error Handling
+
+=== Consistent Exception Hierarchy
+
+A consistent exception hierarchy provides clear error information:
+
+* Base exception types for different error categories
+* Detailed error messages with context
+* Exception translation to appropriate API responses
+* Error codes for machine-readable error handling
+
+=== Fault Tolerance
+
+The system is designed to be fault-tolerant:
+
+* Graceful degradation when components fail
+* Fallback strategies for authorization decisions
+* Circuit breakers for external dependencies
+* Retry mechanisms for transient failures
+
+== Internationalization
+
+=== Message Externalization
+
+User-facing messages are externalized for internationalization:
+
+* Error messages stored in resource bundles
+* Locale-specific message resolution
+* Separation of UI text from code
+* Consistent message formatting
+
+== Auditing and Monitoring
+
+=== Comprehensive Logging
+
+Logging provides visibility into system operation:
+
+* Request logging for API calls
+* Decision logging for authorization decisions
+* Performance logging for slow operations
+* Error logging with context information
+
+=== Metrics Collection
+
+Metrics are collected for monitoring system health:
+
+* Rule evaluation performance
+* Cache hit ratios
+* Request throughput and latency
+* Database operation timing

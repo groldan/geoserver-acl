@@ -1,0 +1,306 @@
+---
+title: "Deployment View"
+layout: asciidoc
+collection: technical
+---
+= Deployment View
+:imagesdir: images
+:toc: left
+:sectnums:
+
+== Introduction
+
+This section describes how GeoServer ACL can be deployed in various infrastructure environments. It covers deployment options, infrastructure requirements, and considerations for different scenarios.
+
+== Infrastructure Requirements
+
+=== Hardware Requirements
+
+[cols="1,2,1,3"]
+|===
+|Component |Requirement |Minimum |Recommended
+
+|ACL Service
+|CPU
+|2 cores
+|4+ cores
+
+|
+|Memory
+|2 GB
+|4+ GB
+
+|
+|Disk
+|1 GB
+|10+ GB
+
+|Database
+|CPU
+|2 cores
+|4+ cores
+
+|
+|Memory
+|4 GB
+|8+ GB
+
+|
+|Disk
+|10 GB
+|Depends on rule count and spatial data size
+|===
+
+=== Software Requirements
+
+[cols="1,4"]
+|===
+|Component |Requirement
+
+|ACL Service
+|Java 11+ (Java 17 recommended)
+
+|
+|Spring Boot compatible OS (Linux, Windows, macOS)
+
+|Database
+|PostgreSQL 11+ with PostGIS extension (production)
+
+|
+|H2 (testing/development only)
+
+|GeoServer Plugin
+|GeoServer 2.19.x or newer
+
+|
+|Java 11+
+|===
+
+== Deployment Options
+
+GeoServer ACL supports multiple deployment configurations to meet different requirements:
+
+=== Basic Deployment
+
+[plantuml, basic-deployment, svg]
+....
+@startuml
+node "GeoServer" {
+  [GeoServer Instance] as GS
+  [ACL Plugin] as Plugin
+}
+
+node "ACL Server" {
+  [ACL Service] as ACL
+}
+
+database "PostgreSQL" {
+  [PostGIS] as DB
+}
+
+GS --> Plugin : uses
+Plugin --> ACL : HTTP/REST
+ACL --> DB : JDBC
+@enduml
+....
+
+* *Characteristics*:
+** Single GeoServer instance
+** Standalone ACL service
+** Dedicated database
+* *Use cases*:
+** Small to medium deployments
+** Development environments
+** Basic production scenarios
+
+=== High-Availability Deployment
+
+[plantuml, ha-deployment, svg]
+....
+@startuml
+cloud "Load Balancer" as LB
+
+node "GeoServer Cluster" {
+  [GeoServer 1] as GS1
+  [ACL Plugin 1] as Plugin1
+  [GeoServer 2] as GS2
+  [ACL Plugin 2] as Plugin2
+}
+
+node "ACL Service Cluster" {
+  [ACL Service 1] as ACL1
+  [ACL Service 2] as ACL2
+}
+
+database "Database Cluster" {
+  [Primary DB] as DB1
+  [Replica DB] as DB2
+}
+
+LB --> GS1
+LB --> GS2
+GS1 --> Plugin1
+GS2 --> Plugin2
+Plugin1 --> ACL1 : HTTP/REST
+Plugin1 --> ACL2 : HTTP/REST
+Plugin2 --> ACL1 : HTTP/REST
+Plugin2 --> ACL2 : HTTP/REST
+ACL1 --> DB1 : JDBC
+ACL2 --> DB1 : JDBC
+DB1 --> DB2 : replication
+@enduml
+....
+
+* *Characteristics*:
+** Multiple GeoServer instances behind load balancer
+** Clustered ACL services
+** Database with replication
+* *Use cases*:
+** Production environments
+** High-availability requirements
+** Scalable deployments
+
+=== Containerized Deployment
+
+[plantuml, containerized-deployment, svg]
+....
+@startuml
+node "Kubernetes Cluster" {
+  node "GeoServer Pods" {
+    [GeoServer Pod 1] as GSP1
+    [GeoServer Pod 2] as GSP2
+  }
+  
+  node "ACL Service Pods" {
+    [ACL Service Pod 1] as ACLP1
+    [ACL Service Pod 2] as ACLP2
+  }
+}
+
+cloud "Database Service" {
+  database "PostgreSQL" {
+    [PostGIS] as DB
+  }
+}
+
+GSP1 --> ACLP1 : HTTP/REST
+GSP1 --> ACLP2 : HTTP/REST
+GSP2 --> ACLP1 : HTTP/REST
+GSP2 --> ACLP2 : HTTP/REST
+ACLP1 --> DB : JDBC
+ACLP2 --> DB : JDBC
+@enduml
+....
+
+* *Characteristics*:
+** Containerized deployment with Kubernetes/Docker
+** Horizontal scaling of services
+** Managed database service
+* *Use cases*:
+** Cloud deployments
+** DevOps-oriented organizations
+** Scalable and elastic workloads
+
+== Technical Infrastructure
+
+=== Network Configuration
+
+[cols="1,2,1"]
+|===
+|Connection |Description |Default Port
+
+|Client → GeoServer
+|OGC service requests
+|8080
+
+|GeoServer → ACL Service
+|Authorization requests
+|8080
+
+|ACL Service → Database
+|Data persistence
+|5432 (PostgreSQL)
+
+|Admin → ACL Service
+|Rule management
+|8080
+
+|ACL Service Management API
+|Health and monitoring
+|8081
+|===
+
+=== Security Considerations
+
+* *Transport Security*:
+** Use HTTPS for all external connections
+** Use secure database connections
+
+* *Authentication*:
+** Configure Spring Security for the ACL service
+** Set up strong authentication for database access
+
+* *Network Security*:
+** Place ACL service behind firewall
+** Allow only necessary ports and connections
+
+=== Monitoring and Management
+
+* *Health Checks*:
+** Spring Boot Actuator endpoints on management port (8081)
+** Database connectivity checks
+** Plugin-service connectivity checks
+
+* *Metrics*:
+** JVM metrics (memory, CPU, etc.)
+** Request metrics (throughput, latency, etc.)
+** Rule evaluation metrics
+
+* *Logging*:
+** Configurable log levels
+** Centralized log collection recommended
+
+== Migration Path
+
+For users migrating from GeoFence:
+
+1. Set up GeoServer ACL service and database
+2. Export rules from GeoFence
+3. Import rules to GeoServer ACL
+4. Deploy GeoServer ACL plugin
+5. Test functionality
+6. Switch production traffic to GeoServer ACL
+
+== Sizing Guidelines
+
+=== Rule Count Impact
+
+[cols="1,3"]
+|===
+|Rule Count |Recommendations
+
+|< 1,000
+|Standard deployment, 2GB memory for service
+
+|1,000 - 10,000
+|Increase memory to 4GB, optimize caching
+
+|10,000+
+|Consider sharding or specialized database tuning
+|===
+
+=== Request Volume Impact
+
+[cols="1,3"]
+|===
+|Requests per second |Recommendations
+
+|< 10
+|Single service instance sufficient
+
+|10 - 100
+|Multiple service instances, connection pooling
+
+|100+
+|Cluster deployment, extensive caching, database scaling
+|===
