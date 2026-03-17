@@ -76,9 +76,10 @@
     <!-- GeoTools version used by gs-acl-authorization, doesn't need to match any version used by GeoServer -->
     <gt.version>35-SNAPSHOT</gt.version>
     <spring-cloud.version>2025.1.1</spring-cloud.version>
-    <spring-boot.version>4.0.2</spring-boot.version>
-    <jackson.version>3.0.4</jackson.version>
+    <spring-boot.version>4.0.3</spring-boot.version>
+    <jackson.version>3.1.0</jackson.version>
     <lombok.version>1.18.42</lombok.version>
+    <flyway.version>12.1.0</flyway.version>
     <mapstruct.version>1.6.3</mapstruct.version>
     <geolatte.version>1.10</geolatte.version>
     <querydsl.version>7.1</querydsl.version>
@@ -201,6 +202,16 @@
         <artifactId>querydsl-apt</artifactId>
         <version>${querydsl.version}</version>
         <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-core</artifactId>
+        <version>${flyway.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-database-postgresql</artifactId>
+        <version>${flyway.version}</version>
       </dependency>
       <!-- for project dependencies use the BOM (gs-acl-bom) -->
     </dependencies>
