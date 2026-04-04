@@ -61,11 +61,12 @@ public class AclSpringCloudBusAutoConfiguration {
     @PostConstruct
     void log() {
         log.info(
-                "Spring Cloud Bus integration enabled. rabbit[host: {}:{}, user: {}, virtual-host: {}], bus[destination: {}]",
+                "Spring Cloud Bus integration enabled. rabbit[host: {}:{}, user: {}, virtual-host: {}], bus[id: {}, destination: {}]",
                 rabbitProperties.getHost(),
                 rabbitProperties.getPort(),
                 rabbitProperties.getUsername(),
                 rabbitProperties.getVirtualHost(),
+                busProperties.getId(),
                 busProperties.getDestination());
     }
 
