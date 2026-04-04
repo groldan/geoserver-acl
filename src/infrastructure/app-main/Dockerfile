@@ -1,4 +1,4 @@
-FROM eclipse-temurin:25-jre as builder
+FROM eclipse-temurin:25-jre AS builder
 ARG JAR_FILE=target/gs-acl-app-*-bin.jar
 
 COPY ${JAR_FILE} application.jar
