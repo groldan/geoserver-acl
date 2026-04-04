@@ -13,10 +13,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -58,12 +61,16 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
                     })
         },
         indexes = {
-            @Index(name = "idx_adminrule_priority", columnList = "priority"),
             @Index(name = "idx_adminrule_username", columnList = "username"),
             @Index(name = "idx_adminrule_rolename", columnList = "rolename"),
             @Index(name = "idx_adminrule_workspace", columnList = "workspace"),
             @Index(name = "idx_adminrule_grant_type", columnList = "grant_type")
         })
+@SecondaryTable(
+        name = "acl_adminrule_priority",
+        pkJoinColumns = @PrimaryKeyJoinColumn(name = "id"),
+        foreignKey = @ForeignKey(name = "fk_adminrule_priority_adminrule"),
+        indexes = {@Index(name = "idx_adminrule_priority", columnList = "priority")})
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "Rule")
 public class AdminRule extends Auditable implements Cloneable {
     @Serial
@@ -89,6 +96,7 @@ public class AdminRule extends Auditable implements Cloneable {
     @Column(length = 4096)
     private String description;
 
+    @Column(table = "acl_adminrule_priority", nullable = false)
     private long priority;
 
     @Embedded
