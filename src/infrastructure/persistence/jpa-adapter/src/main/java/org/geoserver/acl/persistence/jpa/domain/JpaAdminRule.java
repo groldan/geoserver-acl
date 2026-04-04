@@ -5,7 +5,7 @@
  * Original from GeoFence 3.6 under GPL 2.0 license
  */
 
-package org.geoserver.acl.persistence.jpa.model;
+package org.geoserver.acl.persistence.jpa.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -72,7 +72,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
         foreignKey = @ForeignKey(name = "fk_adminrule_priority_adminrule"),
         indexes = {@Index(name = "idx_adminrule_priority", columnList = "priority")})
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "Rule")
-public class AdminRule extends Auditable implements Cloneable {
+public class JpaAdminRule extends Auditable implements Cloneable {
     @Serial
     private static final long serialVersionUID = 422357467611162461L;
 
@@ -100,18 +100,18 @@ public class AdminRule extends Auditable implements Cloneable {
     private long priority;
 
     @Embedded
-    private AdminRuleIdentifier identifier = new AdminRuleIdentifier();
+    private JpaAdminRuleIdentifier identifier = new JpaAdminRuleIdentifier();
 
     @NonNull
     @Enumerated(EnumType.STRING)
     @Column(name = "grant_type", nullable = false)
-    private AdminGrantType access = AdminGrantType.USER;
+    private JpaAdminGrantType access = JpaAdminGrantType.USER;
 
     // visible for testing
-    public @Override AdminRule clone() {
-        AdminRule clone;
+    public @Override JpaAdminRule clone() {
+        JpaAdminRule clone;
         try {
-            clone = (AdminRule) super.clone();
+            clone = (JpaAdminRule) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException(e);
         }

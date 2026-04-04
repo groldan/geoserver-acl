@@ -7,7 +7,7 @@ import jakarta.validation.Valid;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import tools.jackson.databind.annotation.JsonDeserialize;
 
 /**

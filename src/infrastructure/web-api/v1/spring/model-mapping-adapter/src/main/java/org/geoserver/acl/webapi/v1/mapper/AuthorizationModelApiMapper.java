@@ -24,7 +24,7 @@ import org.mapstruct.ReportingPolicy;
         injectionStrategy = InjectionStrategy.CONSTRUCTOR,
         unmappedTargetPolicy = ReportingPolicy.ERROR,
         uses = {GeometryApiMapper.class, RuleFilterApiMapper.class})
-public interface AuthorizationModelApiMapper {
+interface AuthorizationModelApiMapper {
 
     AccessRequest toApi(org.geoserver.acl.authorization.AccessRequest request);
 

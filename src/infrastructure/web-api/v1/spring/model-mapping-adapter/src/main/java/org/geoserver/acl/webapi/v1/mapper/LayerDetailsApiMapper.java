@@ -17,7 +17,7 @@ import org.mapstruct.ReportingPolicy;
         unmappedTargetPolicy = ReportingPolicy.ERROR,
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
         uses = {GeometryApiMapper.class, LayerAttributeApiMapper.class, EnumsApiMapper.class})
-public abstract class LayerDetailsApiMapper {
+abstract class LayerDetailsApiMapper {
 
     @Mapping(target = "allowedArea", source = "area")
     @Mapping(target = "layerAttributes", source = "attributes")

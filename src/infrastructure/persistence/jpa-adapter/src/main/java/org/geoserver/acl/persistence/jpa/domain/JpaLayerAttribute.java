@@ -5,7 +5,7 @@
  * Original from GeoFence 3.6 under GPL 2.0 license
  */
 
-package org.geoserver.acl.persistence.jpa.model;
+package org.geoserver.acl.persistence.jpa.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -26,7 +26,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 @Accessors(chain = true)
 @Embeddable
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "LayerAttribute")
-public class LayerAttribute implements Serializable, Cloneable {
+public class JpaLayerAttribute implements Serializable, Cloneable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -53,9 +53,9 @@ public class LayerAttribute implements Serializable, Cloneable {
     @Column(name = "access_type", nullable = true /* false */)
     private AccessType access;
 
-    public @Override LayerAttribute clone() {
+    public @Override JpaLayerAttribute clone() {
         try {
-            return (LayerAttribute) super.clone();
+            return (JpaLayerAttribute) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException(e);
         }

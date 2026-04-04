@@ -8,8 +8,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.geoserver.acl.domain.adminrules.AdminRuleRepository;
 import org.geoserver.acl.domain.rules.RuleRepository;
-import org.geoserver.acl.persistence.jpa.mapper.AdminRuleJpaMapper;
-import org.geoserver.acl.persistence.jpa.mapper.RuleJpaMapper;
+import org.geoserver.acl.persistence.jpa.adaptor.AdminRuleJpaMapper;
+import org.geoserver.acl.persistence.jpa.adaptor.RuleJpaMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 

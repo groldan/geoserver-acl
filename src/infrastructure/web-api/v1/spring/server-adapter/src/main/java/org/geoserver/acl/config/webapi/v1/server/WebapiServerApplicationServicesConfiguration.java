@@ -5,8 +5,6 @@
 package org.geoserver.acl.config.webapi.v1.server;
 
 import org.geoserver.acl.authorization.AuthorizationService;
-import org.geoserver.acl.webapi.v1.mapper.AuthorizationModelApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.RuleApiMapper;
 import org.geoserver.acl.webapi.v1.server.AuthorizationApiController;
 import org.geoserver.acl.webapi.v1.server.AuthorizationApiDelegate;
 import org.geoserver.acl.webapi.v1.server.AuthorizationApiDelegateImpl;
@@ -20,7 +18,7 @@ import org.springframework.web.context.request.NativeWebRequest;
  * Provides the {@link AuthorizationApiController}
  */
 @Configuration(proxyBeanMethods = false)
-@Import({ModelMappersConfiguration.class, ObjectMapperConfiguration.class})
+@Import({ObjectMapperConfiguration.class})
 class WebapiServerApplicationServicesConfiguration {
 
     @Bean
@@ -34,9 +32,8 @@ class WebapiServerApplicationServicesConfiguration {
     }
 
     @Bean
-    AuthorizationApiSupport aclAuthorizationApiSupport(
-            NativeWebRequest nativeReq, AuthorizationModelApiMapper mapper, RuleApiMapper rulesMapper) {
+    AuthorizationApiSupport aclAuthorizationApiSupport(NativeWebRequest nativeReq) {
 
-        return new AuthorizationApiSupport(nativeReq, mapper, rulesMapper);
+        return new AuthorizationApiSupport(nativeReq);
     }
 }

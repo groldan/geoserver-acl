@@ -5,7 +5,7 @@
  * Original from GeoFence 3.6 under GPL 2.0 license
  */
 
-package org.geoserver.acl.persistence.jpa.model;
+package org.geoserver.acl.persistence.jpa.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -65,7 +65,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
         foreignKey = @ForeignKey(name = "fk_rule_priority_rule"),
         indexes = {@Index(name = "idx_rule_priority", columnList = "priority")})
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "Rule")
-public class Rule extends Auditable implements Serializable, Cloneable {
+public class JpaRule extends Auditable implements Serializable, Cloneable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -92,18 +92,18 @@ public class Rule extends Auditable implements Serializable, Cloneable {
     private long priority;
 
     @Embedded
-    private RuleIdentifier identifier = new RuleIdentifier();
+    private JpaRuleIdentifier identifier = new JpaRuleIdentifier();
 
     @Embedded
-    private LayerDetails layerDetails;
+    private JpaLayerDetails layerDetails;
 
     @Embedded
-    private RuleLimits ruleLimits;
+    private JpaRuleLimits ruleLimits;
 
-    public @Override Rule clone() {
-        Rule clone;
+    public @Override JpaRule clone() {
+        JpaRule clone;
         try {
-            clone = (Rule) super.clone();
+            clone = (JpaRule) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException(e);
         }

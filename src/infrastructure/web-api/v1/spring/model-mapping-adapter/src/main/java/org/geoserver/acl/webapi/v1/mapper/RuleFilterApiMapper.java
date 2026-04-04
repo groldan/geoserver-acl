@@ -12,10 +12,8 @@ import org.geoserver.acl.webapi.v1.model.AddressRangeFilter;
 import org.geoserver.acl.webapi.v1.model.AdminGrantType;
 import org.geoserver.acl.webapi.v1.model.SetFilter;
 import org.geoserver.acl.webapi.v1.model.TextFilter;
-import org.springframework.stereotype.Component;
 
-@Component
-public class RuleFilterApiMapper {
+class RuleFilterApiMapper {
 
     public org.geoserver.acl.webapi.v1.model.AdminRuleFilter map(AdminRuleFilter filter) {
         if (filter == null) return null;

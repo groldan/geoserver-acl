@@ -5,7 +5,7 @@
  * Original from GeoFence 3.6 under GPL 2.0 license
  */
 
-package org.geoserver.acl.persistence.jpa.model;
+package org.geoserver.acl.persistence.jpa.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -24,7 +24,7 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 @Embeddable
-public class RuleLimits implements Serializable, Cloneable {
+public class JpaRuleLimits implements Serializable, Cloneable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -34,18 +34,18 @@ public class RuleLimits implements Serializable, Cloneable {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "limits_spatial_filter_type", nullable = true)
-    private SpatialFilterType spatialFilterType;
+    private JpaSpatialFilterType spatialFilterType;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "limits_catalog_mode", nullable = true)
-    private CatalogMode catalogMode;
+    private JpaCatalogMode catalogMode;
 
     boolean isEmpty() {
         return allowedArea == null && spatialFilterType == null && catalogMode == null;
     }
 
     @SneakyThrows(CloneNotSupportedException.class)
-    public @Override RuleLimits clone() {
-        return (RuleLimits) super.clone();
+    public @Override JpaRuleLimits clone() {
+        return (JpaRuleLimits) super.clone();
     }
 }

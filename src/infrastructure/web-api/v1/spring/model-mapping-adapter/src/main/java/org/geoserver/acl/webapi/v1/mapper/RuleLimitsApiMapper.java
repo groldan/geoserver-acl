@@ -17,7 +17,7 @@ import org.mapstruct.ReportingPolicy;
         //        nullValueMappingStrategy = NullValueMappingStrategy.RETURN_DEFAULT,
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
         uses = {GeometryApiMapper.class, EnumsApiMapper.class})
-public interface RuleLimitsApiMapper {
+interface RuleLimitsApiMapper {
 
     org.geoserver.acl.webapi.v1.model.RuleLimits toApi(org.geoserver.acl.domain.rules.RuleLimits limits);
 

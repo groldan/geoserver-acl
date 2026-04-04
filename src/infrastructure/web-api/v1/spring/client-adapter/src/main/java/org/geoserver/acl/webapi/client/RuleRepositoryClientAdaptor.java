@@ -24,11 +24,8 @@ import org.geoserver.acl.domain.rules.RuleIdentifierConflictException;
 import org.geoserver.acl.domain.rules.RuleLimits;
 import org.geoserver.acl.domain.rules.RuleRepository;
 import org.geoserver.acl.webapi.v1.client.DataRulesApi;
-import org.geoserver.acl.webapi.v1.mapper.EnumsApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.LayerDetailsApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.RuleApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.RuleFilterApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.RuleLimitsApiMapper;
+import org.geoserver.acl.webapi.v1.mapper.AclApiModelMapper;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
@@ -38,12 +35,7 @@ import org.springframework.web.client.RestClientResponseException;
 class RuleRepositoryClientAdaptor implements RuleRepository {
 
     private final DataRulesApi apiClient;
-    private final RuleApiMapper mapper = DomainMappers.ruleApiMapper();
-    private final EnumsApiMapper enumsMapper = DomainMappers.enumsApiMapper();
-    private final RuleLimitsApiMapper limitsMapper = DomainMappers.ruleLimitsApiMapper();
-    private final LayerDetailsApiMapper detailsMapper = DomainMappers.layerDetailsApiMapper();
-
-    private final RuleFilterApiMapper filterMapper = DomainMappers.ruleFilterApiMapper();
+    private final AclApiModelMapper mapper = new AclApiModelMapper();
 
     @Override
     public boolean existsById(@NonNull String id) {
@@ -54,9 +46,12 @@ class RuleRepositoryClientAdaptor implements RuleRepository {
     public Rule save(Rule rule) {
         Objects.requireNonNull(rule.getId(), "Rule has no id");
         try {
+            String id = rule.getId();
+            org.geoserver.acl.webapi.v1.model.Rule apiRule = mapper.toApi(rule);
+
             org.geoserver.acl.webapi.v1.model.Rule response;
-            response = apiClient.updateRuleById(rule.getId(), map(rule));
-            return map(response);
+            response = apiClient.updateRuleById(id, apiRule);
+            return mapper.toModel(response);
         } catch (HttpClientErrorException.Conflict e) {
             throw new RuleIdentifierConflictException(reason(e), e);
         } catch (HttpClientErrorException.BadRequest | HttpClientErrorException.NotFound e) {
@@ -69,13 +64,15 @@ class RuleRepositoryClientAdaptor implements RuleRepository {
         if (null != rule.getId()) throw new IllegalArgumentException("Rule must have no id");
         org.geoserver.acl.webapi.v1.model.Rule response;
         try {
-            response = apiClient.createRule(map(rule), enumsMapper.map(position));
+            org.geoserver.acl.webapi.v1.model.Rule apiRule = mapper.toApi(rule);
+            org.geoserver.acl.webapi.v1.model.InsertPosition apiPosition = mapper.toApi(position);
+            response = apiClient.createRule(apiRule, apiPosition);
         } catch (HttpClientErrorException.BadRequest e) {
             throw new IllegalArgumentException(reason(e), e);
         } catch (HttpClientErrorException.Conflict c) {
             throw new RuleIdentifierConflictException(reason(c), c);
         }
-        return map(response);
+        return mapper.toModel(response);
     }
 
     @Override
@@ -100,26 +97,27 @@ class RuleRepositoryClientAdaptor implements RuleRepository {
 
     @Override
     public int count(RuleFilter filter) {
-        return apiClient.countRules(map(filter));
+        org.geoserver.acl.webapi.v1.model.RuleFilter apiFilter = mapper.toApi(filter);
+        return apiClient.countRules(apiFilter);
     }
 
     @Override
     public Stream<Rule> findAll() {
         List<org.geoserver.acl.webapi.v1.model.Rule> rules = apiClient.getRules(null, null);
-        return rules.stream().map(this::map);
+        return rules.stream().map(mapper::toModel);
     }
 
     @Override
     public Stream<Rule> findAll(RuleQuery<RuleFilter> query) {
 
         org.geoserver.acl.webapi.v1.model.RuleFilter filter =
-                query.getFilter().map(filterMapper::toApi).orElse(null);
+                query.getFilter().map(mapper::toApi).orElse(null);
 
         Integer limit = query.getLimit();
         String nextCursor = query.getNextId();
         List<org.geoserver.acl.webapi.v1.model.Rule> rules = apiClient.queryRules(limit, nextCursor, filter);
 
-        return rules.stream().map(this::map);
+        return rules.stream().map(mapper::toModel);
     }
 
     @Override
@@ -130,7 +128,7 @@ class RuleRepositoryClientAdaptor implements RuleRepository {
         } catch (HttpClientErrorException.NotFound e) {
             rule = null;
         }
-        return Optional.ofNullable(rule).map(this::map);
+        return Optional.ofNullable(rule).map(mapper::toModel);
     }
 
     @Override
@@ -143,7 +141,7 @@ class RuleRepositoryClientAdaptor implements RuleRepository {
         } catch (HttpClientErrorException.Conflict e) {
             throw new IllegalStateException("Found multiple rules with priority " + priority);
         }
-        return Optional.ofNullable(rule).map(this::map);
+        return Optional.ofNullable(rule).map(mapper::toModel);
     }
 
     @Override
@@ -176,7 +174,8 @@ class RuleRepositoryClientAdaptor implements RuleRepository {
     @Override
     public void setLimits(@NonNull String ruleId, RuleLimits limits) {
         try {
-            apiClient.setRuleLimits(ruleId, limitsMapper.toApi(limits));
+            org.geoserver.acl.webapi.v1.model.RuleLimits apiLimits = mapper.toApi(limits);
+            apiClient.setRuleLimits(ruleId, apiLimits);
         } catch (HttpClientErrorException.BadRequest | HttpClientErrorException.NotFound e) {
             throw new IllegalArgumentException(reason(e), e);
         }
@@ -185,7 +184,8 @@ class RuleRepositoryClientAdaptor implements RuleRepository {
     @Override
     public void setLayerDetails(@NonNull String ruleId, LayerDetails detailsNew) {
         try {
-            apiClient.setRuleLayerDetails(ruleId, detailsMapper.map(detailsNew));
+            org.geoserver.acl.webapi.v1.model.LayerDetails apiDetails = mapper.toApi(detailsNew);
+            apiClient.setRuleLayerDetails(ruleId, apiDetails);
         } catch (HttpClientErrorException.BadRequest e) {
             throw new IllegalArgumentException(reason(e), e);
         }
@@ -206,22 +206,12 @@ class RuleRepositoryClientAdaptor implements RuleRepository {
 
         HttpStatusCode statusCode = response.getStatusCode();
         if (OK.value() == statusCode.value()) {
-            return Optional.of(detailsMapper.map(response.getBody()));
-        } else if (NO_CONTENT.value() == statusCode.value()) {
+            org.geoserver.acl.webapi.v1.model.@Nullable LayerDetails apiDetails = response.getBody();
+            return Optional.of(mapper.toModel(apiDetails));
+        }
+        if (NO_CONTENT.value() == statusCode.value()) {
             return Optional.empty();
         }
         throw new IllegalStateException("Unexpected response status code: " + statusCode);
-    }
-
-    private org.geoserver.acl.webapi.v1.model.RuleFilter map(RuleFilter filter) {
-        return filterMapper.toApi(filter);
-    }
-
-    private org.geoserver.acl.webapi.v1.model.Rule map(Rule rule) {
-        return mapper.toApi(rule);
-    }
-
-    private Rule map(org.geoserver.acl.webapi.v1.model.Rule rule) {
-        return mapper.toModel(rule);
     }
 }

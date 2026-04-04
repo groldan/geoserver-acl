@@ -5,65 +5,56 @@
 package org.geoserver.acl.webapi.v1.server;
 
 import lombok.NonNull;
-import org.geoserver.acl.authorization.AccessSummary;
+import org.geoserver.acl.authorization.AccessRequest;
 import org.geoserver.acl.authorization.AccessSummaryRequest;
-import org.geoserver.acl.webapi.v1.mapper.AuthorizationModelApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.RuleApiMapper;
+import org.geoserver.acl.authorization.AdminAccessRequest;
 import org.geoserver.acl.webapi.v1.model.AccessInfo;
-import org.geoserver.acl.webapi.v1.model.AccessRequest;
+import org.geoserver.acl.webapi.v1.model.AccessSummary;
 import org.geoserver.acl.webapi.v1.model.AdminAccessInfo;
-import org.geoserver.acl.webapi.v1.model.AdminAccessRequest;
 import org.geoserver.acl.webapi.v1.model.Rule;
 import org.springframework.web.context.request.NativeWebRequest;
 
 public class AuthorizationApiSupport extends ApiImplSupport<AccessInfo, org.geoserver.acl.authorization.AccessInfo> {
 
-    private final RuleApiMapper rulesMapper;
-    private final AuthorizationModelApiMapper mapper;
-
-    public AuthorizationApiSupport(
-            @NonNull NativeWebRequest nativeRequest,
-            @NonNull AuthorizationModelApiMapper mapper,
-            @NonNull RuleApiMapper rulesMapper) {
-
-        super(nativeRequest, mapper::toApi, mapper::toModel);
-        this.mapper = mapper;
-        this.rulesMapper = rulesMapper;
+    public AuthorizationApiSupport(@NonNull NativeWebRequest nativeRequest) {
+        super(nativeRequest);
     }
 
-    public Rule toApi(org.geoserver.acl.domain.rules.Rule rule) {
-        return rulesMapper.toApi(rule);
+    @Override
+    public org.geoserver.acl.authorization.AccessInfo toModel(AccessInfo dto) {
+        return apiModelMapper.toModel(dto);
     }
 
-    public AccessRequest toApi(org.geoserver.acl.authorization.AccessRequest request) {
-        return mapper.toApi(request);
+    @Override
+    public AccessInfo toApi(org.geoserver.acl.authorization.AccessInfo model) {
+        return apiModelMapper.toApi(model);
     }
 
-    public org.geoserver.acl.authorization.AccessRequest toModel(AccessRequest request) {
-        return mapper.toModel(request);
+    public AccessRequest toModel(org.geoserver.acl.webapi.v1.model.AccessRequest request) {
+        return apiModelMapper.toModel(request);
     }
 
-    public AdminAccessRequest toApi(org.geoserver.acl.authorization.AdminAccessRequest request) {
-        return mapper.toApi(request);
+    public AdminAccessRequest toModel(org.geoserver.acl.webapi.v1.model.AdminAccessRequest request) {
+        return apiModelMapper.toModel(request);
     }
 
-    public org.geoserver.acl.authorization.AdminAccessRequest toModel(AdminAccessRequest request) {
-        return mapper.toModel(request);
+    public AdminAccessInfo toApi(org.geoserver.acl.authorization.AdminAccessInfo modelResponse) {
+        return apiModelMapper.toApi(modelResponse);
     }
 
-    public AdminAccessInfo toApi(org.geoserver.acl.authorization.AdminAccessInfo access) {
-        return mapper.toApi(access);
+    public org.geoserver.acl.domain.rules.Rule toModel(Rule dto) {
+        return apiModelMapper.toModel(dto);
     }
 
-    public org.geoserver.acl.authorization.AdminAccessInfo toModel(AdminAccessInfo access) {
-        return mapper.toModel(access);
+    public Rule toApi(org.geoserver.acl.domain.rules.Rule model) {
+        return apiModelMapper.toApi(model);
     }
 
     public AccessSummaryRequest toModel(org.geoserver.acl.webapi.v1.model.AccessSummaryRequest request) {
-        return mapper.toModel(request);
+        return apiModelMapper.toModel(request);
     }
 
-    public org.geoserver.acl.webapi.v1.model.AccessSummary toApi(AccessSummary response) {
-        return mapper.toApi(response);
+    public AccessSummary toApi(org.geoserver.acl.authorization.AccessSummary modelResponse) {
+        return apiModelMapper.toApi(modelResponse);
     }
 }

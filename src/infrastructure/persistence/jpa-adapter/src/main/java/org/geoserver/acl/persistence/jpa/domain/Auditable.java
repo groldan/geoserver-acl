@@ -2,7 +2,7 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geoserver.acl.persistence.jpa.model;
+package org.geoserver.acl.persistence.jpa.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;

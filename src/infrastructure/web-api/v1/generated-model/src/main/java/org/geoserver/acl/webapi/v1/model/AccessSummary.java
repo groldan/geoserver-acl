@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.processing.Generated;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Summary of what resources a user can access across all workspaces. For each workspace, lists the admin access level and which layers are allowed or forbidden.

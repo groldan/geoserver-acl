@@ -5,7 +5,7 @@
  * Original from GeoFence 3.6 under GPL 2.0 license
  */
 
-package org.geoserver.acl.persistence.jpa.model;
+package org.geoserver.acl.persistence.jpa.domain;
 
 /**
  * CatalogMode is the mode used in geoserver for a given layer.
@@ -13,7 +13,7 @@ package org.geoserver.acl.persistence.jpa.model;
  * @author Emanuele Tajariol (etj at geo-solutions.it) (originally as part of GeoFence)
  * @author Gabriel Roldan - Camptocamp
  */
-public enum CatalogMode {
+public enum JpaCatalogMode {
     HIDE,
     CHALLENGE,
     MIXED;

@@ -2,7 +2,7 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geoserver.acl.persistence.jpa.mapper;
+package org.geoserver.acl.persistence.jpa.adaptor;
 
 import org.geoserver.acl.domain.filter.predicate.SubnetV4Utils;
 import org.mapstruct.Condition;
@@ -16,20 +16,20 @@ import org.mapstruct.ReportingPolicy;
         // in case something changes in the model, make the code generation fail so we make sure the
         // mapper stays in sync
         unmappedTargetPolicy = ReportingPolicy.ERROR)
-interface IPAddressRangeJpaMapper {
+public interface IPAddressRangeJpaMapper {
 
-    default org.geoserver.acl.persistence.jpa.model.IPAddressRange toEntity(String cidrNotation) {
+    default org.geoserver.acl.persistence.jpa.domain.JpaIPAddressRange toEntity(String cidrNotation) {
         if (null == cidrNotation) {
-            return org.geoserver.acl.persistence.jpa.model.IPAddressRange.noData();
+            return org.geoserver.acl.persistence.jpa.domain.JpaIPAddressRange.noData();
         }
         SubnetV4Utils su = new SubnetV4Utils(cidrNotation);
         long low = su.getInfo().getAddressAsInteger();
         int size = su.getInfo().getMaskSize();
-        long high = org.geoserver.acl.persistence.jpa.model.IPAddressRange.NULL;
-        return new org.geoserver.acl.persistence.jpa.model.IPAddressRange(low, high, size);
+        long high = org.geoserver.acl.persistence.jpa.domain.JpaIPAddressRange.NULL;
+        return new org.geoserver.acl.persistence.jpa.domain.JpaIPAddressRange(low, high, size);
     }
 
-    default String toModel(org.geoserver.acl.persistence.jpa.model.IPAddressRange entity) {
+    default String toModel(org.geoserver.acl.persistence.jpa.domain.JpaIPAddressRange entity) {
         if (isNotEmpty(entity)) {
             long low = entity.getLow();
             int size = entity.getSize();
@@ -40,7 +40,7 @@ interface IPAddressRangeJpaMapper {
     }
 
     @Condition
-    static boolean isNotEmpty(org.geoserver.acl.persistence.jpa.model.IPAddressRange jpa) {
+    static boolean isNotEmpty(org.geoserver.acl.persistence.jpa.domain.JpaIPAddressRange jpa) {
         return jpa != null && !jpa.isEmpty();
     }
 }

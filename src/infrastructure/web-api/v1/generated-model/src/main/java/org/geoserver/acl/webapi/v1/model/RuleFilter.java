@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Generated;
 import jakarta.validation.Valid;
 import java.util.Objects;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Query filter for searching data access rules. All specified filter criteria must match for a rule to be included in results (AND logic). Omitted filters act as wildcards that match any value. Use this to find rules matching specific combinations of user, role, service, workspace, layer, etc.

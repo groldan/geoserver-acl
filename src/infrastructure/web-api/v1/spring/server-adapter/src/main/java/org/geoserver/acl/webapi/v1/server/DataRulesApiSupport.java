@@ -7,37 +7,35 @@ package org.geoserver.acl.webapi.v1.server;
 import lombok.NonNull;
 import org.geoserver.acl.domain.rules.LayerDetails;
 import org.geoserver.acl.domain.rules.RuleLimits;
-import org.geoserver.acl.webapi.v1.mapper.LayerDetailsApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.RuleApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.RuleLimitsApiMapper;
 import org.geoserver.acl.webapi.v1.model.Rule;
 import org.springframework.web.context.request.NativeWebRequest;
 
 public class DataRulesApiSupport extends ApiImplSupport<Rule, org.geoserver.acl.domain.rules.Rule> {
 
-    private final @NonNull LayerDetailsApiMapper layerDetailsMapper;
-    private final @NonNull RuleLimitsApiMapper limitsMapper;
+    public DataRulesApiSupport(@NonNull NativeWebRequest nativeRequest) {
 
-    public DataRulesApiSupport(
-            @NonNull NativeWebRequest nativeRequest,
-            RuleApiMapper mapper,
-            LayerDetailsApiMapper layerDetailsMapper,
-            RuleLimitsApiMapper limitsMapper) {
-
-        super(nativeRequest, mapper::toApi, mapper::toModel);
-        this.layerDetailsMapper = layerDetailsMapper;
-        this.limitsMapper = limitsMapper;
+        super(nativeRequest);
     }
 
-    public RuleLimits toModel(org.geoserver.acl.webapi.v1.model.RuleLimits ruleLimits) {
-        return limitsMapper.toModel(ruleLimits);
+    @Override
+    public org.geoserver.acl.domain.rules.Rule toModel(Rule dto) {
+        return apiModelMapper.toModel(dto);
+    }
+
+    @Override
+    public Rule toApi(org.geoserver.acl.domain.rules.Rule model) {
+        return apiModelMapper.toApi(model);
     }
 
     public LayerDetails toModel(org.geoserver.acl.webapi.v1.model.LayerDetails layerDetails) {
-        return layerDetailsMapper.map(layerDetails);
+        return apiModelMapper.toModel(layerDetails);
     }
 
-    public org.geoserver.acl.webapi.v1.model.LayerDetails toApi(LayerDetails layerDetails) {
-        return layerDetailsMapper.map(layerDetails);
+    public org.geoserver.acl.webapi.v1.model.LayerDetails toApi(LayerDetails dto) {
+        return apiModelMapper.toApi(dto);
+    }
+
+    public RuleLimits toModel(org.geoserver.acl.webapi.v1.model.RuleLimits ruleLimits) {
+        return apiModelMapper.toModel(ruleLimits);
     }
 }

@@ -21,7 +21,7 @@ import org.mapstruct.ReportingPolicy;
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
         unmappedTargetPolicy = ReportingPolicy.ERROR,
         uses = {EnumsApiMapper.class})
-public abstract class LayerAttributeApiMapper {
+abstract class LayerAttributeApiMapper {
 
     public abstract org.geoserver.acl.webapi.v1.model.LayerAttribute map(LayerAttribute la);
 

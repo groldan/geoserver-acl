@@ -20,7 +20,7 @@ import org.mapstruct.ReportingPolicy;
         unmappedTargetPolicy = ReportingPolicy.ERROR,
         nullValueMappingStrategy = NullValueMappingStrategy.RETURN_DEFAULT,
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface EnumsApiMapper {
+interface EnumsApiMapper {
 
     LayerDetails.LayerType map(org.geoserver.acl.webapi.v1.model.LayerDetails.TypeEnum value);
 

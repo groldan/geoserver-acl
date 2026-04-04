@@ -43,7 +43,7 @@ public class DataRulesApiDelegateImpl implements DataRulesApiDelegate {
             if (null == position) {
                 created = service.insert(model);
             } else {
-                created = service.insert(model, support.toRulesModel(position));
+                created = service.insert(model, support.toRuleModel(position));
             }
         } catch (RuleIdentifierConflictException conflict) {
             return support.error(CONFLICT, conflict.getMessage());

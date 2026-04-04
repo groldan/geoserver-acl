@@ -7,7 +7,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.util.Objects;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A data access rule that controls permissions for GeoServer resources. Rules are evaluated in priority order (lower numbers first) to determine whether a request should be allowed, denied, or limited.  Each rule matches requests based on a combination of criteria: user, role, IP address, OWS service type, request type, workspace, and layer. Properties set to null act as wildcards that match any value.  Rules are uniquely identified by the combination of: user, role, service, request, subfield, workspace, layer, and addressRange. This means you cannot have two rules with the exact same matching criteria.

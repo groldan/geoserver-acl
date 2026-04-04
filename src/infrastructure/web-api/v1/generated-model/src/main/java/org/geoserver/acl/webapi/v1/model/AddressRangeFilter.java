@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Pattern;
 import java.util.Objects;
 import javax.annotation.processing.Generated;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Filter for matching IP address ranges. Matches rules whose address range includes or overlaps with the specified address range.

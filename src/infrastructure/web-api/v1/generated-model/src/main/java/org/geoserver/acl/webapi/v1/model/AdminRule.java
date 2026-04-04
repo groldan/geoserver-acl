@@ -7,7 +7,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.util.Objects;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A workspace administration rule that determines whether users have administrative privileges on specific workspaces. Admin rules are simpler than data rules - they only match on user, role, workspace, and IP address, and grant either ADMIN or USER level access.  Rules are evaluated in priority order (lower numbers first) until a match is found. Like data rules, admin rules are uniquely identified by the combination of their matching criteria.

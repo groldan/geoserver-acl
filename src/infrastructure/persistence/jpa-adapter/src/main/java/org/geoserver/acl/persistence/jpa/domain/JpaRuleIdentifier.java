@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geoserver.acl.persistence.jpa.model;
+package org.geoserver.acl.persistence.jpa.domain;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
@@ -19,7 +19,7 @@ import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 /**
- * Uniquely identifies a {@link Rule}, all properties are mandatory in order for the {@link Rule}'s
+ * Uniquely identifies a {@link JpaRule}, all properties are mandatory in order for the {@link JpaRule}'s
  * unique constraint to be enforced by the database, which otherwise will consider {@literal NULL !=
  * NULL}.
  *
@@ -28,7 +28,7 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 @Embeddable
-public class RuleIdentifier implements Serializable, Cloneable {
+public class JpaRuleIdentifier implements Serializable, Cloneable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -38,7 +38,7 @@ public class RuleIdentifier implements Serializable, Cloneable {
     @NonNull
     @Enumerated(EnumType.STRING)
     @Column(name = "grant_type", nullable = false)
-    private GrantType access = GrantType.DENY;
+    private JpaGrantType access = JpaGrantType.DENY;
 
     @NonNull
     @Column(name = "username", nullable = false)
@@ -59,7 +59,7 @@ public class RuleIdentifier implements Serializable, Cloneable {
         @AttributeOverride(name = "high", column = @Column(name = "ip_high")),
         @AttributeOverride(name = "size", column = @Column(name = "ip_size"))
     })
-    private IPAddressRange addressRange = new IPAddressRange();
+    private JpaIPAddressRange addressRange = new JpaIPAddressRange();
 
     @NonNull
     @Column(nullable = false)
@@ -77,10 +77,10 @@ public class RuleIdentifier implements Serializable, Cloneable {
     @Column(nullable = false)
     private String layer = ANY;
 
-    public @Override RuleIdentifier clone() {
-        RuleIdentifier clone;
+    public @Override JpaRuleIdentifier clone() {
+        JpaRuleIdentifier clone;
         try {
-            clone = (RuleIdentifier) super.clone();
+            clone = (JpaRuleIdentifier) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException(e);
         }

@@ -6,7 +6,7 @@ package org.geoserver.acl.persistence.jpa.adaptor;
 
 import static org.geoserver.acl.domain.rules.GrantType.ALLOW;
 import static org.geoserver.acl.domain.rules.GrantType.LIMIT;
-import static org.geoserver.acl.persistence.jpa.mapper.RuleJpaMapper.decodeId;
+import static org.geoserver.acl.persistence.jpa.adaptor.RuleJpaMapper.decodeId;
 
 import com.querydsl.core.CloseableIterator;
 import com.querydsl.core.types.Order;
@@ -36,15 +36,14 @@ import org.geoserver.acl.domain.rules.RuleFilter;
 import org.geoserver.acl.domain.rules.RuleIdentifierConflictException;
 import org.geoserver.acl.domain.rules.RuleLimits;
 import org.geoserver.acl.domain.rules.RuleRepository;
+import org.geoserver.acl.persistence.jpa.domain.JpaGrantType;
+import org.geoserver.acl.persistence.jpa.domain.JpaLayerDetails;
+import org.geoserver.acl.persistence.jpa.domain.JpaRuleIdentifier;
 import org.geoserver.acl.persistence.jpa.domain.JpaRuleRepository;
+import org.geoserver.acl.persistence.jpa.domain.QJpaRule;
 import org.geoserver.acl.persistence.jpa.domain.TransactionReadOnly;
 import org.geoserver.acl.persistence.jpa.domain.TransactionRequired;
 import org.geoserver.acl.persistence.jpa.domain.TransactionSupported;
-import org.geoserver.acl.persistence.jpa.mapper.RuleJpaMapper;
-import org.geoserver.acl.persistence.jpa.model.GrantType;
-import org.geoserver.acl.persistence.jpa.model.LayerDetails;
-import org.geoserver.acl.persistence.jpa.model.QRule;
-import org.geoserver.acl.persistence.jpa.model.RuleIdentifier;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 
 @Slf4j
@@ -72,8 +71,8 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
         this.queryMapper = new PredicateMapper();
     }
 
-    private PriorityResolver<org.geoserver.acl.persistence.jpa.model.Rule> priorityResolver() {
-        return new PriorityResolver<>(jparepo, org.geoserver.acl.persistence.jpa.model.Rule::getPriority);
+    private PriorityResolver<org.geoserver.acl.persistence.jpa.domain.JpaRule> priorityResolver() {
+        return new PriorityResolver<>(jparepo, org.geoserver.acl.persistence.jpa.domain.JpaRule::getPriority);
     }
 
     @Override
@@ -84,7 +83,7 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
     @Override
     public Optional<Rule> findOneByPriority(long priority) {
         try {
-            return jparepo.findOne(QRule.rule.priority.eq(priority)).map(modelMapper::toModel);
+            return jparepo.findOne(QJpaRule.jpaRule.priority.eq(priority)).map(modelMapper::toModel);
         } catch (IncorrectResultSizeDataAccessException e) {
             throw new IllegalStateException("There are multiple Rules with priority " + priority);
         }
@@ -117,12 +116,12 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
 
         if (query.getNextId() != null) {
             Long nextId = decodeId(query.getNextId());
-            predicate = QRule.rule.id.goe(nextId).and(predicate);
+            predicate = QJpaRule.jpaRule.id.goe(nextId).and(predicate);
         }
 
-        CloseableIterator<org.geoserver.acl.persistence.jpa.model.Rule> iterator = query(predicate);
+        CloseableIterator<org.geoserver.acl.persistence.jpa.domain.JpaRule> iterator = query(predicate);
 
-        try (Stream<org.geoserver.acl.persistence.jpa.model.Rule> stream = stream(iterator)) {
+        try (Stream<org.geoserver.acl.persistence.jpa.domain.JpaRule> stream = stream(iterator)) {
             Stream<Rule> rules = stream.map(modelMapper::toModel).filter(postFilter);
             final Integer pageSize = query.getLimit();
             if (null != pageSize) {
@@ -132,19 +131,19 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
         }
     }
 
-    private CloseableIterator<org.geoserver.acl.persistence.jpa.model.Rule> query(Predicate predicate) {
+    private CloseableIterator<org.geoserver.acl.persistence.jpa.domain.JpaRule> query(Predicate predicate) {
 
-        CloseableIterator<org.geoserver.acl.persistence.jpa.model.Rule> iterator = new JPAQuery<
-                        org.geoserver.acl.persistence.jpa.model.Rule>(em)
-                .from(QRule.rule)
+        CloseableIterator<org.geoserver.acl.persistence.jpa.domain.JpaRule> iterator = new JPAQuery<
+                        org.geoserver.acl.persistence.jpa.domain.JpaRule>(em)
+                .from(QJpaRule.jpaRule)
                 .where(predicate)
-                .orderBy(new OrderSpecifier<>(Order.ASC, QRule.rule.priority))
+                .orderBy(new OrderSpecifier<>(Order.ASC, QJpaRule.jpaRule.priority))
                 .iterate();
         return iterator;
     }
 
-    private Stream<org.geoserver.acl.persistence.jpa.model.Rule> stream(
-            CloseableIterator<org.geoserver.acl.persistence.jpa.model.Rule> iterator) {
+    private Stream<org.geoserver.acl.persistence.jpa.domain.JpaRule> stream(
+            CloseableIterator<org.geoserver.acl.persistence.jpa.domain.JpaRule> iterator) {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false)
                 .onClose(iterator::close);
     }
@@ -164,23 +163,23 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
         Objects.requireNonNull(rule.getId());
         findDup(rule).ifPresent(this::throwConflict);
 
-        org.geoserver.acl.persistence.jpa.model.Rule entity = getOrThrowIAE(rule.getId());
+        org.geoserver.acl.persistence.jpa.domain.JpaRule entity = getOrThrowIAE(rule.getId());
         removeLayerDetailsIfNotApplicableAnyMore(rule, entity);
 
-        PriorityResolver<org.geoserver.acl.persistence.jpa.model.Rule> priorityResolver = priorityResolver();
+        PriorityResolver<org.geoserver.acl.persistence.jpa.domain.JpaRule> priorityResolver = priorityResolver();
         long finalPriority = priorityResolver.resolvePriorityUpdate(entity.getPriority(), rule.getPriority());
 
         modelMapper.updateEntity(entity, rule);
         entity.setPriority(finalPriority);
 
-        org.geoserver.acl.persistence.jpa.model.Rule saved = jparepo.save(entity);
+        org.geoserver.acl.persistence.jpa.domain.JpaRule saved = jparepo.save(entity);
 
         notifyCollateralUpdates(priorityResolver.getUpdatedIds());
         return modelMapper.toModel(saved);
     }
 
     private void removeLayerDetailsIfNotApplicableAnyMore(
-            Rule rule, org.geoserver.acl.persistence.jpa.model.Rule entity) {
+            Rule rule, org.geoserver.acl.persistence.jpa.domain.JpaRule entity) {
         if (entity.getLayerDetails() != null && !entity.getLayerDetails().isEmpty()) {
             boolean updatedCanHaveDetails = ALLOW == rule.getIdentifier().getAccess()
                     && null != rule.getIdentifier().getLayer();
@@ -208,13 +207,13 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
 
         findDup(rule).ifPresent(this::throwConflict);
 
-        PriorityResolver<org.geoserver.acl.persistence.jpa.model.Rule> priorityResolver = priorityResolver();
+        PriorityResolver<org.geoserver.acl.persistence.jpa.domain.JpaRule> priorityResolver = priorityResolver();
         final long finalPriority = priorityResolver.resolveFinalPriority(rule.getPriority(), position);
 
-        org.geoserver.acl.persistence.jpa.model.Rule entity = modelMapper.toEntity(rule);
+        org.geoserver.acl.persistence.jpa.domain.JpaRule entity = modelMapper.toEntity(rule);
         entity.setPriority(finalPriority);
 
-        org.geoserver.acl.persistence.jpa.model.Rule saved = jparepo.save(entity);
+        org.geoserver.acl.persistence.jpa.domain.JpaRule saved = jparepo.save(entity);
 
         notifyCollateralUpdates(priorityResolver.getUpdatedIds());
 
@@ -235,19 +234,19 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
         }
 
         final Long id = decodeId(rule.getId());
-        final RuleIdentifier identifier = modelMapper.toEntity(rule.getIdentifier());
+        final JpaRuleIdentifier identifier = modelMapper.toEntity(rule.getIdentifier());
 
-        List<org.geoserver.acl.persistence.jpa.model.Rule> matches = jparepo.findAllByIdentifier(identifier);
+        List<org.geoserver.acl.persistence.jpa.domain.JpaRule> matches = jparepo.findAllByIdentifier(identifier);
         return matches.stream().filter(r -> !r.getId().equals(id)).findFirst().map(modelMapper::toModel);
     }
 
     @Override
     @TransactionRequired
     public boolean deleteById(@NonNull String id) {
-        org.geoserver.acl.persistence.jpa.model.Rule rule;
+        org.geoserver.acl.persistence.jpa.domain.JpaRule rule;
         try {
             rule = jparepo.getReferenceById(decodeId(id));
-            LayerDetails details = rule.getLayerDetails();
+            JpaLayerDetails details = rule.getLayerDetails();
             if (details != null) {
                 details.setAllowedStyles(null);
                 details.setAttributes(null);
@@ -292,8 +291,8 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
     @TransactionRequired
     public void swap(String id1, String id2) {
 
-        org.geoserver.acl.persistence.jpa.model.Rule rule1 = getOrThrowIAE(id1);
-        org.geoserver.acl.persistence.jpa.model.Rule rule2 = getOrThrowIAE(id2);
+        org.geoserver.acl.persistence.jpa.domain.JpaRule rule1 = getOrThrowIAE(id1);
+        org.geoserver.acl.persistence.jpa.domain.JpaRule rule2 = getOrThrowIAE(id2);
 
         long p1 = rule1.getPriority();
         long p2 = rule2.getPriority();
@@ -308,16 +307,16 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
     @TransactionRequired
     public void setAllowedStyles(@NonNull String ruleId, Set<String> styles) {
 
-        org.geoserver.acl.persistence.jpa.model.Rule rule = getOrThrowIAE(ruleId);
+        org.geoserver.acl.persistence.jpa.domain.JpaRule rule = getOrThrowIAE(ruleId);
 
-        if (RuleIdentifier.ANY.equals(rule.getIdentifier().getLayer())) {
+        if (JpaRuleIdentifier.ANY.equals(rule.getIdentifier().getLayer())) {
             throw new IllegalArgumentException("Rule has no layer, can't set allowed styles");
         }
         if (rule.getLayerDetails() == null || rule.getLayerDetails().isEmpty()) {
             throw new IllegalArgumentException("Rule has no details associated");
         }
 
-        LayerDetails layerDetails = rule.getLayerDetails();
+        JpaLayerDetails layerDetails = rule.getLayerDetails();
         layerDetails.getAllowedStyles().clear();
         if (styles != null && !styles.isEmpty()) {
             layerDetails.getAllowedStyles().addAll(styles);
@@ -328,8 +327,8 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
     @Override
     @TransactionRequired
     public void setLimits(String ruleId, RuleLimits limits) {
-        org.geoserver.acl.persistence.jpa.model.Rule rule = getOrThrowIAE(ruleId);
-        if (limits != null && rule.getIdentifier().getAccess() != GrantType.LIMIT) {
+        org.geoserver.acl.persistence.jpa.domain.JpaRule rule = getOrThrowIAE(ruleId);
+        if (limits != null && rule.getIdentifier().getAccess() != JpaGrantType.LIMIT) {
             throw new IllegalArgumentException("Rule is not of LIMIT type");
         }
 
@@ -342,15 +341,15 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
     @TransactionRequired
     public void setLayerDetails(String ruleId, org.geoserver.acl.domain.rules.LayerDetails detailsNew) {
 
-        org.geoserver.acl.persistence.jpa.model.Rule rule = getOrThrowIAE(ruleId);
+        org.geoserver.acl.persistence.jpa.domain.JpaRule rule = getOrThrowIAE(ruleId);
 
-        if (rule.getIdentifier().getAccess() != GrantType.ALLOW && detailsNew != null)
+        if (rule.getIdentifier().getAccess() != JpaGrantType.ALLOW && detailsNew != null)
             throw new IllegalArgumentException("Rule is not of ALLOW type");
 
-        if (RuleIdentifier.ANY.equals(rule.getIdentifier().getLayer()) && detailsNew != null)
+        if (JpaRuleIdentifier.ANY.equals(rule.getIdentifier().getLayer()) && detailsNew != null)
             throw new IllegalArgumentException("Rule does not refer to a fixed layer");
 
-        LayerDetails details = modelMapper.toEntity(detailsNew);
+        JpaLayerDetails details = modelMapper.toEntity(detailsNew);
         rule.setLayerDetails(details);
         jparepo.save(rule);
     }
@@ -359,21 +358,21 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
     @TransactionReadOnly
     public Optional<org.geoserver.acl.domain.rules.LayerDetails> findLayerDetailsByRuleId(@NonNull String ruleId) {
 
-        org.geoserver.acl.persistence.jpa.model.Rule jparule = getOrThrowIAE(ruleId);
+        org.geoserver.acl.persistence.jpa.domain.JpaRule jparule = getOrThrowIAE(ruleId);
 
         // if (RuleIdentifier.ANY.equals(jparule.getIdentifier().getLayer())) {
         // throw new IllegalArgumentException("Rule " + ruleId + " has not layer set");
         // }
 
-        LayerDetails jpadetails = jparule.getLayerDetails();
+        JpaLayerDetails jpadetails = jparule.getLayerDetails();
         if (jpadetails.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(modelMapper.toModel(jpadetails));
     }
 
-    private org.geoserver.acl.persistence.jpa.model.Rule getOrThrowIAE(@NonNull String ruleId) {
-        org.geoserver.acl.persistence.jpa.model.Rule rule;
+    private org.geoserver.acl.persistence.jpa.domain.JpaRule getOrThrowIAE(@NonNull String ruleId) {
+        org.geoserver.acl.persistence.jpa.domain.JpaRule rule;
         try {
             rule = jparepo.getReferenceById(decodeId(ruleId));
             rule.getIdentifier().getLayer();

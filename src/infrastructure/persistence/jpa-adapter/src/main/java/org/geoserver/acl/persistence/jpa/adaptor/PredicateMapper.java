@@ -22,10 +22,10 @@ import org.geoserver.acl.domain.filter.predicate.FilterType;
 import org.geoserver.acl.domain.filter.predicate.InSetPredicate;
 import org.geoserver.acl.domain.filter.predicate.TextFilter;
 import org.geoserver.acl.domain.rules.RuleFilter;
-import org.geoserver.acl.persistence.jpa.model.QAdminRule;
-import org.geoserver.acl.persistence.jpa.model.QAdminRuleIdentifier;
-import org.geoserver.acl.persistence.jpa.model.QRule;
-import org.geoserver.acl.persistence.jpa.model.QRuleIdentifier;
+import org.geoserver.acl.persistence.jpa.domain.QJpaAdminRule;
+import org.geoserver.acl.persistence.jpa.domain.QJpaAdminRuleIdentifier;
+import org.geoserver.acl.persistence.jpa.domain.QJpaRule;
+import org.geoserver.acl.persistence.jpa.domain.QJpaRuleIdentifier;
 
 @Slf4j
 class PredicateMapper {
@@ -36,7 +36,7 @@ class PredicateMapper {
 
     Optional<BooleanExpression> toPriorityPredicate(OptionalLong pstart) {
         if (pstart.isPresent()) {
-            return Optional.of(QRule.rule.priority.goe(pstart.getAsLong()));
+            return Optional.of(QJpaRule.jpaRule.priority.goe(pstart.getAsLong()));
         }
         return Optional.empty();
     }
@@ -46,9 +46,9 @@ class PredicateMapper {
             return Optional.empty();
         }
 
-        QAdminRuleIdentifier qIdentifier = QAdminRule.adminRule.identifier;
+        QJpaAdminRuleIdentifier qIdentifier = QJpaAdminRule.jpaAdminRule.identifier;
 
-        Predicate grantType = map(filter.getGrantType(), QAdminRule.adminRule.access);
+        Predicate grantType = map(filter.getGrantType(), QJpaAdminRule.jpaAdminRule.access);
         Predicate user = map(filter.getUser(), qIdentifier.username);
         Predicate role = map(filter.getRole(), qIdentifier.rolename);
         // Predicate address = map(filter.getSourceAddress(), identifier.addressRange);
@@ -66,14 +66,14 @@ class PredicateMapper {
     }
 
     private Predicate map(
-            AdminGrantType grantType, EnumPath<org.geoserver.acl.persistence.jpa.model.AdminGrantType> access) {
+            AdminGrantType grantType, EnumPath<org.geoserver.acl.persistence.jpa.domain.JpaAdminGrantType> access) {
 
         if (null == grantType) return null;
         switch (grantType) {
             case ADMIN:
-                return access.eq(org.geoserver.acl.persistence.jpa.model.AdminGrantType.ADMIN);
+                return access.eq(org.geoserver.acl.persistence.jpa.domain.JpaAdminGrantType.ADMIN);
             case USER:
-                return access.eq(org.geoserver.acl.persistence.jpa.model.AdminGrantType.USER);
+                return access.eq(org.geoserver.acl.persistence.jpa.domain.JpaAdminGrantType.USER);
             default:
                 throw new IllegalArgumentException("Unknown AdminGrantType: " + grantType);
         }
@@ -90,7 +90,7 @@ class PredicateMapper {
             return Optional.empty();
         }
 
-        QRuleIdentifier qIdentifier = QRule.rule.identifier;
+        QJpaRuleIdentifier qIdentifier = QJpaRule.jpaRule.identifier;
 
         Predicate user = map(filter.getUser(), qIdentifier.username);
         Predicate role = map(filter.getRole(), qIdentifier.rolename);

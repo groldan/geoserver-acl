@@ -7,8 +7,6 @@ package org.geoserver.acl.persistence.jpa.domain;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.geoserver.acl.persistence.jpa.model.Rule;
-import org.geoserver.acl.persistence.jpa.model.RuleIdentifier;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,10 +15,10 @@ import org.springframework.data.repository.query.Param;
 
 @TransactionSupported
 public interface JpaRuleRepository
-        extends JpaRepository<Rule, Long>, QuerydslPredicateExecutor<Rule>, PriorityRepository<Rule> {
+        extends JpaRepository<JpaRule, Long>, QuerydslPredicateExecutor<JpaRule>, PriorityRepository<JpaRule> {
 
     @Override
-    Optional<Rule> findOneByPriority(long priority);
+    Optional<JpaRule> findOneByPriority(long priority);
 
     @Override
     @TransactionRequired
@@ -58,5 +56,5 @@ public interface JpaRuleRepository
     @Query("SELECT MIN(r.priority) FROM Rule r")
     Optional<Long> findMinPriority();
 
-    List<Rule> findAllByIdentifier(RuleIdentifier identifier);
+    List<JpaRule> findAllByIdentifier(JpaRuleIdentifier identifier);
 }

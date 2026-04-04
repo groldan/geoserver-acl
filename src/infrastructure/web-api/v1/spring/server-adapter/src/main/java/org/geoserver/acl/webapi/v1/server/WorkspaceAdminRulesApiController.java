@@ -1,7 +1,6 @@
 package org.geoserver.acl.webapi.v1.server;
 
 import jakarta.annotation.Generated;
-import jakarta.validation.constraints.*;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

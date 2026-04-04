@@ -8,12 +8,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Objects;
-import java.util.function.Function;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.geoserver.acl.webapi.v1.mapper.EnumsApiMapperImpl;
-import org.geoserver.acl.webapi.v1.mapper.GeometryApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.RuleFilterApiMapper;
+import org.geoserver.acl.webapi.v1.mapper.AclApiModelMapper;
 import org.geoserver.acl.webapi.v1.model.AdminRuleFilter;
 import org.geoserver.acl.webapi.v1.model.InsertPosition;
 import org.geoserver.acl.webapi.v1.model.RuleFilter;
@@ -29,38 +26,31 @@ import tools.jackson.databind.ObjectReader;
 @RequiredArgsConstructor
 public abstract class ApiImplSupport<D, T> {
 
-    private final @NonNull NativeWebRequest nativeRequest;
-    private final @NonNull Function<T, D> toApi;
-    private final @NonNull Function<D, T> toModel;
+    protected final @NonNull NativeWebRequest nativeRequest;
+    protected final @NonNull AclApiModelMapper apiModelMapper = new AclApiModelMapper();
 
-    private final RuleFilterApiMapper filterMapper = new RuleFilterApiMapper();
+    public abstract T toModel(D dto);
 
-    public T toModel(D dto) {
-        return toModel.apply(dto);
-    }
-
-    public D toApi(T model) {
-        return toApi.apply(model);
-    }
+    public abstract D toApi(T model);
 
     public InsertPosition toApi(org.geoserver.acl.domain.rules.InsertPosition position) {
-        return new EnumsApiMapperImpl().map(position);
+        return apiModelMapper.toApi(position);
     }
 
-    public org.geoserver.acl.domain.rules.InsertPosition toRulesModel(InsertPosition position) {
-        return new EnumsApiMapperImpl().toRuleInsertPosition(position);
+    public org.geoserver.acl.domain.rules.InsertPosition toRuleModel(InsertPosition position) {
+        return apiModelMapper.toRuleModel(position);
     }
 
     public org.geoserver.acl.domain.adminrules.InsertPosition toAdminRulesModel(InsertPosition position) {
-        return new EnumsApiMapperImpl().toAdminRuleInsertPosition(position);
+        return apiModelMapper.toAdminRuleModel(position);
     }
 
     public org.geoserver.acl.domain.adminrules.AdminRuleFilter map(AdminRuleFilter adminRuleFilter) {
-        return filterMapper.map(adminRuleFilter);
+        return apiModelMapper.toModel(adminRuleFilter);
     }
 
     public org.geoserver.acl.domain.rules.RuleFilter map(RuleFilter filter) {
-        return filterMapper.toModel(filter);
+        return apiModelMapper.toModel(filter);
     }
 
     public T mergePatch(final T orig) {
@@ -72,13 +62,13 @@ public abstract class ApiImplSupport<D, T> {
                     bufferedRequest, "Servlet Filter not set up, expected RequestBodyBufferingServletRequest");
             BufferedReader reader = bufferedRequest.getReader();
 
-            D current = toApi.apply(orig);
+            D current = toApi(orig);
             ObjectReader readerForUpdating = new ObjectMapper().readerForUpdating(current);
             merged = readerForUpdating.readValue(reader);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        return toModel.apply(merged);
+        return toModel(merged);
     }
 
     public <R> ResponseEntity<R> error(HttpStatus code, String reason) {
@@ -99,6 +89,6 @@ public abstract class ApiImplSupport<D, T> {
         } else {
             useWkb = false;
         }
-        GeometryApiMapper.setUseWkb(useWkb);
+        apiModelMapper.setUseWkb(useWkb);
     }
 }
