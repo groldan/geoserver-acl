@@ -11,10 +11,13 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import java.io.Serial;
@@ -51,12 +54,16 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
         //                    })
         //        },
         indexes = {
-            @Index(name = "idx_rule_priority", columnList = "priority"),
             @Index(name = "idx_rule_service", columnList = "service"),
             @Index(name = "idx_rule_request", columnList = "request"),
             @Index(name = "idx_rule_workspace", columnList = "workspace"),
             @Index(name = "idx_rule_layer", columnList = "layer")
         })
+@SecondaryTable(
+        name = "acl_rule_priority",
+        pkJoinColumns = @PrimaryKeyJoinColumn(name = "id"),
+        foreignKey = @ForeignKey(name = "fk_rule_priority_rule"),
+        indexes = {@Index(name = "idx_rule_priority", columnList = "priority")})
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "Rule")
 public class Rule extends Auditable implements Serializable, Cloneable {
 
@@ -81,7 +88,7 @@ public class Rule extends Auditable implements Serializable, Cloneable {
     private String description;
 
     /** Unique, prevent overlapping priorities and force the upper layers to be careful */
-    @Column(nullable = false)
+    @Column(table = "acl_rule_priority", nullable = false)
     private long priority;
 
     @Embedded

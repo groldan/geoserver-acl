@@ -35,7 +35,10 @@ public interface JpaAdminRuleRepository
     @Override
     @TransactionRequired
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query("UPDATE AdminRule SET priority = priority + :offset WHERE priority >= :priorityStart")
+    @Query(
+            value =
+                    "UPDATE {h-schema}acl_adminrule_priority SET priority = priority + :offset WHERE priority >= :priorityStart",
+            nativeQuery = true)
     int shiftPriority(@Param("priorityStart") long priorityStart, @Param("offset") long offset);
 
     @Override
@@ -46,7 +49,10 @@ public interface JpaAdminRuleRepository
     @Override
     @TransactionRequired
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query("UPDATE AdminRule SET priority = priority + :offset WHERE priority BETWEEN :min AND :max")
+    @Query(
+            value =
+                    "UPDATE {h-schema}acl_adminrule_priority SET priority = priority + :offset WHERE priority BETWEEN :min AND :max",
+            nativeQuery = true)
     void shiftPrioritiesBetween(@Param("min") long min, @Param("max") long max, @Param("offset") long offset);
 
     @Override
