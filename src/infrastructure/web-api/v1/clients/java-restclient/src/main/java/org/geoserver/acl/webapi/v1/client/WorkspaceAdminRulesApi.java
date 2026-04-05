@@ -112,7 +112,7 @@ public class WorkspaceAdminRulesApi {
      * Returns whether the AdminRule with the given identifier exists
      * <p><b>200</b> - boolean indicating whether the admin rule with the provided identifier exists
      * @param id Unique identifier for the rule. This is a system-generated ID that uniquely identifies a specific rule instance.
-     * @return ResponseEntity&lt;Boolean&gt;
+     * @return {@code ResponseEntity<Boolean>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<Boolean> adminRuleExistsByIdWithHttpInfo(@jakarta.annotation.Nonnull String id)
@@ -205,7 +205,7 @@ public class WorkspaceAdminRulesApi {
      * Returns the number of rules that matches the search criteria
      * <p><b>200</b> - The total number of rules that match the query criteria. This count represents the full result set, not just the current page if pagination is being used.
      * @param adminRuleFilter The adminRuleFilter parameter
-     * @return ResponseEntity&lt;Integer&gt;
+     * @return {@code ResponseEntity<Integer>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<Integer> countAdminRulesWithHttpInfo(
@@ -283,7 +283,7 @@ public class WorkspaceAdminRulesApi {
      *
      * Returns the total number of rules
      * <p><b>200</b> - The total number of rules that match the query criteria. This count represents the full result set, not just the current page if pagination is being used.
-     * @return ResponseEntity&lt;Integer&gt;
+     * @return {@code ResponseEntity<Integer>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<Integer> countAllAdminRulesWithHttpInfo() throws RestClientResponseException {
@@ -380,7 +380,7 @@ public class WorkspaceAdminRulesApi {
      * <p><b>201</b> - A workspace administration rule. Returned after successfully creating, retrieving, or updating an admin rule. The response includes the complete rule definition with its system-generated ID.
      * @param adminRule The adminRule parameter
      * @param position Controls how the rule&#39;s priority value should be interpreted when inserting a new rule. See the InsertPosition schema for detailed explanation of FIXED, FROM_START, and FROM_END options. Defaults to FIXED if not specified.
-     * @return ResponseEntity&lt;AdminRule&gt;
+     * @return {@code ResponseEntity<AdminRule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<AdminRule> createAdminRuleWithHttpInfo(
@@ -556,7 +556,7 @@ public class WorkspaceAdminRulesApi {
      *
      * Atomically deletes all admin rules and return the number of rules removed
      * <p><b>200</b> - The total number of rules that match the query criteria. This count represents the full result set, not just the current page if pagination is being used.
-     * @return ResponseEntity&lt;Integer&gt;
+     * @return {@code ResponseEntity<Integer>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<Integer> deleteAllAdminRulesWithHttpInfo() throws RestClientResponseException {
@@ -582,7 +582,7 @@ public class WorkspaceAdminRulesApi {
      * @param limit Maximum number of items to return in a single page. If more items match the query than this limit, the response will include an X-ACL-NEXTCURSOR header with a cursor value to fetch the next page. Use in combination with nextCursor to paginate through large result sets.
      * @param nextCursor Cursor for pagination. When a response includes an X-ACL-NEXTCURSOR header, use that value here to fetch the next page of results. Continue until X-ACL-NEXTCURSOR is null or absent, indicating no more results are available. This implements efficient cursor-based pagination that works well with large datasets.
      * @param adminRuleFilter The adminRuleFilter parameter
-     * @return List&lt;AdminRule&gt;
+     * @return {@code List<AdminRule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     private ResponseSpec findAdminRulesRequestCreation(
@@ -632,7 +632,7 @@ public class WorkspaceAdminRulesApi {
      * @param limit Maximum number of items to return in a single page. If more items match the query than this limit, the response will include an X-ACL-NEXTCURSOR header with a cursor value to fetch the next page. Use in combination with nextCursor to paginate through large result sets.
      * @param nextCursor Cursor for pagination. When a response includes an X-ACL-NEXTCURSOR header, use that value here to fetch the next page of results. Continue until X-ACL-NEXTCURSOR is null or absent, indicating no more results are available. This implements efficient cursor-based pagination that works well with large datasets.
      * @param adminRuleFilter The adminRuleFilter parameter
-     * @return List&lt;AdminRule&gt;
+     * @return {@code List<AdminRule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public List<AdminRule> findAdminRules(
@@ -651,7 +651,7 @@ public class WorkspaceAdminRulesApi {
      * @param limit Maximum number of items to return in a single page. If more items match the query than this limit, the response will include an X-ACL-NEXTCURSOR header with a cursor value to fetch the next page. Use in combination with nextCursor to paginate through large result sets.
      * @param nextCursor Cursor for pagination. When a response includes an X-ACL-NEXTCURSOR header, use that value here to fetch the next page of results. Continue until X-ACL-NEXTCURSOR is null or absent, indicating no more results are available. This implements efficient cursor-based pagination that works well with large datasets.
      * @param adminRuleFilter The adminRuleFilter parameter
-     * @return ResponseEntity&lt;List&lt;AdminRule&gt;&gt;
+     * @return {@code ResponseEntity<List<AdminRule>>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<List<AdminRule>> findAdminRulesWithHttpInfo(
@@ -687,7 +687,7 @@ public class WorkspaceAdminRulesApi {
      * <p><b>200</b> - A paginated list of workspace admin rules matching the query criteria. Rules are returned in priority order (lowest priority number first). If more rules exist beyond this page, check the X-ACL-NEXTCURSOR header to fetch the next page. An empty array indicates no rules match or you&#39;ve reached the end of results.
      * @param limit Maximum number of items to return in a single page. If more items match the query than this limit, the response will include an X-ACL-NEXTCURSOR header with a cursor value to fetch the next page. Use in combination with nextCursor to paginate through large result sets.
      * @param nextCursor Cursor for pagination. When a response includes an X-ACL-NEXTCURSOR header, use that value here to fetch the next page of results. Continue until X-ACL-NEXTCURSOR is null or absent, indicating no more results are available. This implements efficient cursor-based pagination that works well with large datasets.
-     * @return List&lt;AdminRule&gt;
+     * @return {@code List<AdminRule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     private ResponseSpec findAllAdminRulesRequestCreation(
@@ -734,7 +734,7 @@ public class WorkspaceAdminRulesApi {
      * <p><b>200</b> - A paginated list of workspace admin rules matching the query criteria. Rules are returned in priority order (lowest priority number first). If more rules exist beyond this page, check the X-ACL-NEXTCURSOR header to fetch the next page. An empty array indicates no rules match or you&#39;ve reached the end of results.
      * @param limit Maximum number of items to return in a single page. If more items match the query than this limit, the response will include an X-ACL-NEXTCURSOR header with a cursor value to fetch the next page. Use in combination with nextCursor to paginate through large result sets.
      * @param nextCursor Cursor for pagination. When a response includes an X-ACL-NEXTCURSOR header, use that value here to fetch the next page of results. Continue until X-ACL-NEXTCURSOR is null or absent, indicating no more results are available. This implements efficient cursor-based pagination that works well with large datasets.
-     * @return List&lt;AdminRule&gt;
+     * @return {@code List<AdminRule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public List<AdminRule> findAllAdminRules(
@@ -750,7 +750,7 @@ public class WorkspaceAdminRulesApi {
      * <p><b>200</b> - A paginated list of workspace admin rules matching the query criteria. Rules are returned in priority order (lowest priority number first). If more rules exist beyond this page, check the X-ACL-NEXTCURSOR header to fetch the next page. An empty array indicates no rules match or you&#39;ve reached the end of results.
      * @param limit Maximum number of items to return in a single page. If more items match the query than this limit, the response will include an X-ACL-NEXTCURSOR header with a cursor value to fetch the next page. Use in combination with nextCursor to paginate through large result sets.
      * @param nextCursor Cursor for pagination. When a response includes an X-ACL-NEXTCURSOR header, use that value here to fetch the next page of results. Continue until X-ACL-NEXTCURSOR is null or absent, indicating no more results are available. This implements efficient cursor-based pagination that works well with large datasets.
-     * @return ResponseEntity&lt;List&lt;AdminRule&gt;&gt;
+     * @return {@code ResponseEntity<List<AdminRule>>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<List<AdminRule>> findAllAdminRulesWithHttpInfo(
@@ -849,7 +849,7 @@ public class WorkspaceAdminRulesApi {
      * <p><b>200</b> - A workspace administration rule. Returned after successfully creating, retrieving, or updating an admin rule. The response includes the complete rule definition with its system-generated ID.
      * <p><b>404</b> - Not found
      * @param adminRuleFilter The adminRuleFilter parameter
-     * @return ResponseEntity&lt;AdminRule&gt;
+     * @return {@code ResponseEntity<AdminRule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<AdminRule> findFirstAdminRuleWithHttpInfo(
@@ -951,7 +951,7 @@ public class WorkspaceAdminRulesApi {
      * <p><b>404</b> - Not found
      * <p><b>409</b> - Conflict, there&#39;s more than one rule with the requested priority
      * @param priority The rule priority to search for
-     * @return ResponseEntity&lt;AdminRule&gt;
+     * @return {@code ResponseEntity<AdminRule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<AdminRule> findOneAdminRuleByPriorityWithHttpInfo(@jakarta.annotation.Nonnull Long priority)
@@ -1050,7 +1050,7 @@ public class WorkspaceAdminRulesApi {
      * <p><b>200</b> - A workspace administration rule. Returned after successfully creating, retrieving, or updating an admin rule. The response includes the complete rule definition with its system-generated ID.
      * <p><b>404</b> - Not found
      * @param id Unique identifier for the rule. This is a system-generated ID that uniquely identifies a specific rule instance.
-     * @return ResponseEntity&lt;AdminRule&gt;
+     * @return {@code ResponseEntity<AdminRule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<AdminRule> getAdminRuleByIdWithHttpInfo(@jakarta.annotation.Nonnull String id)
@@ -1165,7 +1165,7 @@ public class WorkspaceAdminRulesApi {
      * <p><b>404</b> - Not found
      * @param priorityStart The minimum priority to start shifting at (inclusive)
      * @param offset The priority offset to apply to all rules from priorityStart onwards
-     * @return ResponseEntity&lt;Integer&gt;
+     * @return {@code ResponseEntity<Integer>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<Integer> shiftAdminRulesByPriorityWithHttpInfo(
@@ -1402,7 +1402,7 @@ public class WorkspaceAdminRulesApi {
      * <p><b>409</b> - Conflict, tried to update the rule identifier properties to one that belongs to another rule
      * @param id Unique identifier for the rule. This is a system-generated ID that uniquely identifies a specific rule instance.
      * @param adminRule The adminRule parameter
-     * @return ResponseEntity&lt;AdminRule&gt;
+     * @return {@code ResponseEntity<AdminRule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<AdminRule> updateAdminRuleWithHttpInfo(

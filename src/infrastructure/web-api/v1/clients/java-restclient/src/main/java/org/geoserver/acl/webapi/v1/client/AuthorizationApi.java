@@ -115,7 +115,7 @@ public class AuthorizationApi {
      * Evaluates the data access rules for a specific request and returns the compiled access permissions. The response indicates whether access is granted, denied, or limited, along with any applicable restrictions such as spatial filters, CQL filters, allowed styles, and attribute-level permissions. Rules are evaluated in priority order until a matching rule determines the final access decision.
      * <p><b>200</b> - The result of evaluating access rules for a resource request. This response contains the final access decision (ALLOW, DENY, or LIMIT) along with any applicable restrictions such as spatial filters, CQL filters, allowed styles, and attribute-level permissions. Includes a list of rule IDs that were applied to reach this decision.
      * @param accessRequest The accessRequest parameter
-     * @return ResponseEntity&lt;AccessInfo&gt;
+     * @return {@code ResponseEntity<AccessInfo>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<AccessInfo> getAccessInfoWithHttpInfo(@jakarta.annotation.Nonnull AccessRequest accessRequest)
@@ -208,7 +208,7 @@ public class AuthorizationApi {
      * Determines whether a user has administrative privileges on a specific workspace by evaluating the configured admin rules. Returns admin access information including whether the user has full administrative rights or only user-level access to the workspace.
      * <p><b>200</b> - The result of evaluating admin rules for workspace access. Indicates whether the user has administrative privileges on the requested workspace and includes the ID of the matching admin rule.
      * @param adminAccessRequest The adminAccessRequest parameter
-     * @return ResponseEntity&lt;AdminAccessInfo&gt;
+     * @return {@code ResponseEntity<AdminAccessInfo>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<AdminAccessInfo> getAdminAuthorizationWithHttpInfo(
@@ -235,7 +235,7 @@ public class AuthorizationApi {
      * Returns the list of data rules that match and would be applied when evaluating the given access request. This is useful for debugging and understanding which rules affect a particular request. Rules are returned in the order they would be evaluated (by priority).
      * <p><b>200</b> - A paginated list of data access rules matching the query criteria. Rules are returned in priority order (lowest priority number first). If more rules exist beyond this page, check the X-ACL-NEXTCURSOR header to fetch the next page. An empty array indicates no rules match or you&#39;ve reached the end of results.
      * @param accessRequest The accessRequest parameter
-     * @return List&lt;Rule&gt;
+     * @return {@code List<Rule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     private ResponseSpec getMatchingRulesRequestCreation(@jakarta.annotation.Nonnull AccessRequest accessRequest)
@@ -287,7 +287,7 @@ public class AuthorizationApi {
      * Returns the list of data rules that match and would be applied when evaluating the given access request. This is useful for debugging and understanding which rules affect a particular request. Rules are returned in the order they would be evaluated (by priority).
      * <p><b>200</b> - A paginated list of data access rules matching the query criteria. Rules are returned in priority order (lowest priority number first). If more rules exist beyond this page, check the X-ACL-NEXTCURSOR header to fetch the next page. An empty array indicates no rules match or you&#39;ve reached the end of results.
      * @param accessRequest The accessRequest parameter
-     * @return List&lt;Rule&gt;
+     * @return {@code List<Rule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public List<Rule> getMatchingRules(@jakarta.annotation.Nonnull AccessRequest accessRequest)
@@ -301,7 +301,7 @@ public class AuthorizationApi {
      * Returns the list of data rules that match and would be applied when evaluating the given access request. This is useful for debugging and understanding which rules affect a particular request. Rules are returned in the order they would be evaluated (by priority).
      * <p><b>200</b> - A paginated list of data access rules matching the query criteria. Rules are returned in priority order (lowest priority number first). If more rules exist beyond this page, check the X-ACL-NEXTCURSOR header to fetch the next page. An empty array indicates no rules match or you&#39;ve reached the end of results.
      * @param accessRequest The accessRequest parameter
-     * @return ResponseEntity&lt;List&lt;Rule&gt;&gt;
+     * @return {@code ResponseEntity<List<Rule>>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<List<Rule>> getMatchingRulesWithHttpInfo(
@@ -394,7 +394,7 @@ public class AuthorizationApi {
      * Provides a comprehensive summary of what resources a user can access across all workspaces. For each workspace, returns the admin access level and lists of allowed and forbidden layers. This is useful for building user interfaces that need to display what resources are available to a particular user.
      * <p><b>200</b> - The list of per-workspace access summary for a user
      * @param accessSummaryRequest The accessSummaryRequest parameter
-     * @return ResponseEntity&lt;AccessSummary&gt;
+     * @return {@code ResponseEntity<AccessSummary>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<AccessSummary> getUserAccessSummaryWithHttpInfo(

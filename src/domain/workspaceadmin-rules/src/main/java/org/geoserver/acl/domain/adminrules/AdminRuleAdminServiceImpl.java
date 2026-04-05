@@ -49,17 +49,11 @@ public class AdminRuleAdminServiceImpl implements AdminRuleAdminService {
     // Basic operations
     // =========================================================================
 
-    /**
-     * @throws AdminRuleIdentifierConflictException
-     */
     @Override
     public AdminRule insert(AdminRule rule) {
         return insert(rule, InsertPosition.FIXED);
     }
 
-    /**
-     * @throws AdminRuleIdentifierConflictException
-     */
     @Override
     public AdminRule insert(AdminRule rule, InsertPosition position) {
         // Acquire lock BEFORE the transaction starts to prevent race conditions
@@ -73,9 +67,6 @@ public class AdminRuleAdminServiceImpl implements AdminRuleAdminService {
         }
     }
 
-    /**
-     * @throws AdminRuleIdentifierConflictException
-     */
     @Override
     public AdminRule update(AdminRule rule) {
         // Acquire lock since updating can shift priorities
@@ -93,15 +84,6 @@ public class AdminRuleAdminServiceImpl implements AdminRuleAdminService {
         }
     }
 
-    /**
-     * Shifts the priority of the rules having <TT>priority &gt;= priorityStart</TT> down by
-     * <TT>offset</TT>.
-     *
-     * <p>The shift will not be performed if there are no Rules with priority: <br>
-     * <tt> startPriority &lt;= priority &lt; startPriority + offset </TT>
-     *
-     * @return the number of rules updated, or -1 if no need to shift.
-     */
     @Override
     public int shift(long priorityStart, long offset) {
         // Acquire lock for explicit priority shifting
@@ -125,9 +107,6 @@ public class AdminRuleAdminServiceImpl implements AdminRuleAdminService {
         }
     }
 
-    /**
-     * @throws IllegalArgumentException if the filter produces more than one result
-     */
     @Override
     public Optional<AdminRule> get(@NonNull String id) {
         return repository.findById(id);
@@ -155,24 +134,11 @@ public class AdminRuleAdminServiceImpl implements AdminRuleAdminService {
         return repository.findAll();
     }
 
-    /**
-     * Return the Rules according to the filter.
-     *
-     * @param page used for retrieving paged data, may be null if not used. If not null, also
-     *     <TT>entries</TT> should be defined.
-     * @param entries used for retrieving paged data, may be null if not used. If not null, also
-     *     <TT>page</TT> should be defined.
-     */
     @Override
     public Stream<AdminRule> getAll(RuleQuery<AdminRuleFilter> query) {
         return repository.findAll(query);
     }
 
-    /**
-     * Search a Rule by priority.
-     *
-     * <p>Returns the rule having the requested priority, or empty if none found.
-     */
     @Override
     public Optional<AdminRule> getRuleByPriority(long priority) {
         return repository.findOneByPriority(priority);
@@ -183,7 +149,6 @@ public class AdminRuleAdminServiceImpl implements AdminRuleAdminService {
         return repository.count();
     }
 
-    /** Return the Rules count according to the filter. */
     @Override
     public int count(AdminRuleFilter filter) {
         return repository.count(filter);

@@ -99,7 +99,7 @@ public class DataRulesApi {
      * Count all data rules
      * Returns the total number of data access rules currently configured in the system.
      * <p><b>200</b> - The total number of rules that match the query criteria. This count represents the full result set, not just the current page if pagination is being used.
-     * @return ResponseEntity&lt;Integer&gt;
+     * @return {@code ResponseEntity<Integer>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<Integer> countAllRulesWithHttpInfo() throws RestClientResponseException {
@@ -188,7 +188,7 @@ public class DataRulesApi {
      * Returns the number of data rules that match the provided filter criteria. Useful for determining result set size before paginating through query results.
      * <p><b>200</b> - The total number of rules that match the query criteria. This count represents the full result set, not just the current page if pagination is being used.
      * @param ruleFilter The ruleFilter parameter
-     * @return ResponseEntity&lt;Integer&gt;
+     * @return {@code ResponseEntity<Integer>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<Integer> countRulesWithHttpInfo(@jakarta.annotation.Nullable RuleFilter ruleFilter)
@@ -293,7 +293,7 @@ public class DataRulesApi {
      * <p><b>409</b> - A rule with the same identifier already exists. Rules are uniquely identified by the combination of: user, role, service, request, subfield, workspace, layer, and addressRange. If you need to modify an existing rule, use the PATCH endpoint instead.
      * @param rule The rule parameter
      * @param position Controls how the rule&#39;s priority value should be interpreted when inserting a new rule. See the InsertPosition schema for detailed explanation of FIXED, FROM_START, and FROM_END options. Defaults to FIXED if not specified.
-     * @return ResponseEntity&lt;Rule&gt;
+     * @return {@code ResponseEntity<Rule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<Rule> createRuleWithHttpInfo(
@@ -376,7 +376,7 @@ public class DataRulesApi {
      * Delete all data rules
      * Removes all data access rules from the system. This operation is atomic - either all rules are deleted successfully, or none are deleted. Returns the count of rules that were removed. Use with caution as this operation cannot be undone.
      * <p><b>200</b> - The total number of rules that match the query criteria. This count represents the full result set, not just the current page if pagination is being used.
-     * @return ResponseEntity&lt;Integer&gt;
+     * @return {@code ResponseEntity<Integer>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<Integer> deleteAllRulesWithHttpInfo() throws RestClientResponseException {
@@ -568,7 +568,7 @@ public class DataRulesApi {
      * <p><b>404</b> - Not found
      * <p><b>409</b> - Conflict, there&#39;s more than one rule with the requested priority
      * @param priority The rule priority to search for
-     * @return ResponseEntity&lt;Rule&gt;
+     * @return {@code ResponseEntity<Rule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<Rule> findOneRuleByPriorityWithHttpInfo(@jakarta.annotation.Nonnull Long priority)
@@ -674,7 +674,7 @@ public class DataRulesApi {
      * <p><b>400</b> - Bad request if the rule does not have a layer name set
      * <p><b>404</b> - Not found if the rule does not exist
      * @param id Unique identifier for the rule. This is a system-generated ID that uniquely identifies a specific rule instance.
-     * @return ResponseEntity&lt;LayerDetails&gt;
+     * @return {@code ResponseEntity<LayerDetails>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<LayerDetails> getLayerDetailsByRuleIdWithHttpInfo(@jakarta.annotation.Nonnull String id)
@@ -774,7 +774,7 @@ public class DataRulesApi {
      * <p><b>200</b> - A data access rule. Returned after successfully creating, retrieving, or updating a rule. The response includes the complete rule definition with its system-generated ID.
      * <p><b>404</b> - No rule exists with the specified ID
      * @param id Unique identifier for the rule. This is a system-generated ID that uniquely identifies a specific rule instance.
-     * @return ResponseEntity&lt;Rule&gt;
+     * @return {@code ResponseEntity<Rule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<Rule> getRuleByIdWithHttpInfo(@jakarta.annotation.Nonnull String id)
@@ -803,7 +803,7 @@ public class DataRulesApi {
      * <p><b>200</b> - A paginated list of data access rules matching the query criteria. Rules are returned in priority order (lowest priority number first). If more rules exist beyond this page, check the X-ACL-NEXTCURSOR header to fetch the next page. An empty array indicates no rules match or you&#39;ve reached the end of results.
      * @param limit Maximum number of items to return in a single page. If more items match the query than this limit, the response will include an X-ACL-NEXTCURSOR header with a cursor value to fetch the next page. Use in combination with nextCursor to paginate through large result sets.
      * @param nextCursor Cursor for pagination. When a response includes an X-ACL-NEXTCURSOR header, use that value here to fetch the next page of results. Continue until X-ACL-NEXTCURSOR is null or absent, indicating no more results are available. This implements efficient cursor-based pagination that works well with large datasets.
-     * @return List&lt;Rule&gt;
+     * @return {@code List<Rule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     private ResponseSpec getRulesRequestCreation(
@@ -850,7 +850,7 @@ public class DataRulesApi {
      * <p><b>200</b> - A paginated list of data access rules matching the query criteria. Rules are returned in priority order (lowest priority number first). If more rules exist beyond this page, check the X-ACL-NEXTCURSOR header to fetch the next page. An empty array indicates no rules match or you&#39;ve reached the end of results.
      * @param limit Maximum number of items to return in a single page. If more items match the query than this limit, the response will include an X-ACL-NEXTCURSOR header with a cursor value to fetch the next page. Use in combination with nextCursor to paginate through large result sets.
      * @param nextCursor Cursor for pagination. When a response includes an X-ACL-NEXTCURSOR header, use that value here to fetch the next page of results. Continue until X-ACL-NEXTCURSOR is null or absent, indicating no more results are available. This implements efficient cursor-based pagination that works well with large datasets.
-     * @return List&lt;Rule&gt;
+     * @return {@code List<Rule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public List<Rule> getRules(
@@ -866,7 +866,7 @@ public class DataRulesApi {
      * <p><b>200</b> - A paginated list of data access rules matching the query criteria. Rules are returned in priority order (lowest priority number first). If more rules exist beyond this page, check the X-ACL-NEXTCURSOR header to fetch the next page. An empty array indicates no rules match or you&#39;ve reached the end of results.
      * @param limit Maximum number of items to return in a single page. If more items match the query than this limit, the response will include an X-ACL-NEXTCURSOR header with a cursor value to fetch the next page. Use in combination with nextCursor to paginate through large result sets.
      * @param nextCursor Cursor for pagination. When a response includes an X-ACL-NEXTCURSOR header, use that value here to fetch the next page of results. Continue until X-ACL-NEXTCURSOR is null or absent, indicating no more results are available. This implements efficient cursor-based pagination that works well with large datasets.
-     * @return ResponseEntity&lt;List&lt;Rule&gt;&gt;
+     * @return {@code ResponseEntity<List<Rule>>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<List<Rule>> getRulesWithHttpInfo(
@@ -898,7 +898,7 @@ public class DataRulesApi {
      * @param limit Maximum number of items to return in a single page. If more items match the query than this limit, the response will include an X-ACL-NEXTCURSOR header with a cursor value to fetch the next page. Use in combination with nextCursor to paginate through large result sets.
      * @param nextCursor Cursor for pagination. When a response includes an X-ACL-NEXTCURSOR header, use that value here to fetch the next page of results. Continue until X-ACL-NEXTCURSOR is null or absent, indicating no more results are available. This implements efficient cursor-based pagination that works well with large datasets.
      * @param ruleFilter The ruleFilter parameter
-     * @return List&lt;Rule&gt;
+     * @return {@code List<Rule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     private ResponseSpec queryRulesRequestCreation(
@@ -948,7 +948,7 @@ public class DataRulesApi {
      * @param limit Maximum number of items to return in a single page. If more items match the query than this limit, the response will include an X-ACL-NEXTCURSOR header with a cursor value to fetch the next page. Use in combination with nextCursor to paginate through large result sets.
      * @param nextCursor Cursor for pagination. When a response includes an X-ACL-NEXTCURSOR header, use that value here to fetch the next page of results. Continue until X-ACL-NEXTCURSOR is null or absent, indicating no more results are available. This implements efficient cursor-based pagination that works well with large datasets.
      * @param ruleFilter The ruleFilter parameter
-     * @return List&lt;Rule&gt;
+     * @return {@code List<Rule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public List<Rule> queryRules(
@@ -967,7 +967,7 @@ public class DataRulesApi {
      * @param limit Maximum number of items to return in a single page. If more items match the query than this limit, the response will include an X-ACL-NEXTCURSOR header with a cursor value to fetch the next page. Use in combination with nextCursor to paginate through large result sets.
      * @param nextCursor Cursor for pagination. When a response includes an X-ACL-NEXTCURSOR header, use that value here to fetch the next page of results. Continue until X-ACL-NEXTCURSOR is null or absent, indicating no more results are available. This implements efficient cursor-based pagination that works well with large datasets.
      * @param ruleFilter The ruleFilter parameter
-     * @return ResponseEntity&lt;List&lt;Rule&gt;&gt;
+     * @return {@code ResponseEntity<List<Rule>>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<List<Rule>> queryRulesWithHttpInfo(
@@ -1069,7 +1069,7 @@ public class DataRulesApi {
      * Checks whether a data rule with the specified ID exists in the system.
      * <p><b>200</b> - Returns true if the rule exists, false otherwise
      * @param id Unique identifier for the rule. This is a system-generated ID that uniquely identifies a specific rule instance.
-     * @return ResponseEntity&lt;Boolean&gt;
+     * @return {@code ResponseEntity<Boolean>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<Boolean> ruleExistsByIdWithHttpInfo(@jakarta.annotation.Nonnull String id)
@@ -1498,7 +1498,7 @@ public class DataRulesApi {
      * <p><b>404</b> - Not found
      * @param priorityStart The minimum priority to start shifting at (inclusive)
      * @param offset The priority offset to apply to all rules from priorityStart onwards
-     * @return ResponseEntity&lt;Integer&gt;
+     * @return {@code ResponseEntity<Integer>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<Integer> shiftRulesByPriorityWithHttpInfo(
@@ -1734,7 +1734,7 @@ public class DataRulesApi {
      * <p><b>409</b> - The updated rule identifier properties would conflict with another existing rule. Rules must have unique combinations of user, role, service, request, workspace, layer, etc.
      * @param id Unique identifier for the rule. This is a system-generated ID that uniquely identifies a specific rule instance.
      * @param rule The rule parameter
-     * @return ResponseEntity&lt;Rule&gt;
+     * @return {@code ResponseEntity<Rule>}
      * @throws RestClientResponseException if an error occurs while attempting to invoke the API
      */
     public ResponseEntity<Rule> updateRuleByIdWithHttpInfo(
