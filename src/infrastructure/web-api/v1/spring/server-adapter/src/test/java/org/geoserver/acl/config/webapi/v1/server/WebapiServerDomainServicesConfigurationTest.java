@@ -9,9 +9,6 @@ import static org.mockito.Mockito.mock;
 
 import org.geoserver.acl.domain.adminrules.AdminRuleRepository;
 import org.geoserver.acl.domain.rules.RuleRepository;
-import org.geoserver.acl.webapi.v1.mapper.AdminRuleApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.EnumsApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.RuleApiMapper;
 import org.geoserver.acl.webapi.v1.server.DataRulesApiController;
 import org.geoserver.acl.webapi.v1.server.DataRulesApiDelegate;
 import org.geoserver.acl.webapi.v1.server.WorkspaceAdminRulesApiController;
@@ -45,12 +42,9 @@ class WebapiServerDomainServicesConfigurationTest {
             assertThat(context)
                     .hasSingleBean(DataRulesApiController.class)
                     .hasSingleBean(DataRulesApiDelegate.class)
-                    .hasSingleBean(RuleApiMapper.class)
                     .hasSingleBean(WorkspaceAdminRulesApiController.class)
                     .hasSingleBean(WorkspaceAdminRulesApiDelegate.class)
-                    .hasSingleBean(AdminRuleApiMapper.class)
-                    .hasSingleBean(JavaTimeModule.class)
-                    .hasSingleBean(EnumsApiMapper.class);
+                    .hasSingleBean(JavaTimeModule.class);
         });
     }
 

@@ -7,8 +7,6 @@ package org.geoserver.acl.persistence.jpa.domain;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.geoserver.acl.persistence.jpa.model.AdminRule;
-import org.geoserver.acl.persistence.jpa.model.AdminRuleIdentifier;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -20,7 +18,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 @TransactionSupported
 public interface JpaAdminRuleRepository
-        extends JpaRepository<AdminRule, Long>, QuerydslPredicateExecutor<AdminRule>, PriorityRepository<AdminRule> {
+        extends JpaRepository<JpaAdminRule, Long>,
+                QuerydslPredicateExecutor<JpaAdminRule>,
+                PriorityRepository<JpaAdminRule> {
 
     Sort naturalOrder = Sort.by("priority");
 
@@ -30,7 +30,7 @@ public interface JpaAdminRuleRepository
     int deleteById(@Param("id") long id);
 
     @Override
-    Optional<AdminRule> findOneByPriority(long priority);
+    Optional<JpaAdminRule> findOneByPriority(long priority);
 
     @Override
     @TransactionRequired
@@ -68,5 +68,5 @@ public interface JpaAdminRuleRepository
     @Query("SELECT MIN(r.priority) FROM AdminRule r")
     Optional<Long> findMinPriority();
 
-    List<AdminRule> findAllByIdentifier(AdminRuleIdentifier identifier);
+    List<JpaAdminRule> findAllByIdentifier(JpaAdminRuleIdentifier identifier);
 }

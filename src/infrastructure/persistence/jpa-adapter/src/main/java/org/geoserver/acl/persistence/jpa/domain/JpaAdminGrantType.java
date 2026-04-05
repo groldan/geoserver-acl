@@ -5,10 +5,10 @@
  * Original from GeoFence 3.6 under GPL 2.0 license
  */
 
-package org.geoserver.acl.persistence.jpa.model;
+package org.geoserver.acl.persistence.jpa.domain;
 
 /** The Enum AdminGrantType. */
-public enum AdminGrantType {
+public enum JpaAdminGrantType {
     ADMIN,
     USER
 }

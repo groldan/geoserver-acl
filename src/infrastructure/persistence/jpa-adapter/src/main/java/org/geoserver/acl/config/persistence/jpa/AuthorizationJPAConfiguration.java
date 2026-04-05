@@ -9,8 +9,8 @@ import java.util.Map;
 import javax.sql.DataSource;
 import org.geoserver.acl.config.persistence.jpa.AclJpaProperties.JpaProperties;
 import org.geoserver.acl.persistence.jpa.domain.JpaAdminRuleRepository;
+import org.geoserver.acl.persistence.jpa.domain.JpaRule;
 import org.geoserver.acl.persistence.jpa.domain.JpaRuleRepository;
-import org.geoserver.acl.persistence.jpa.model.Rule;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.sql.init.dependency.DependsOnDatabaseInitialization;
 import org.springframework.context.annotation.Bean;
@@ -61,7 +61,7 @@ public class AuthorizationJPAConfiguration {
         emf.setDataSource(dataSource);
         emf.setJpaVendorAdapter(authorizationVendorAdapter);
         emf.setJpaPropertyMap(jpaProperties);
-        emf.setPackagesToScan(Rule.class.getPackage().getName());
+        emf.setPackagesToScan(JpaRule.class.getPackage().getName());
         return emf;
     }
 

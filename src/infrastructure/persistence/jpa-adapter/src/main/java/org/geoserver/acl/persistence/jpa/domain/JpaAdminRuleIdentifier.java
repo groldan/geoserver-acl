@@ -3,7 +3,7 @@
  * application directory.
  */
 
-package org.geoserver.acl.persistence.jpa.model;
+package org.geoserver.acl.persistence.jpa.domain;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
@@ -15,8 +15,8 @@ import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 /**
- * Uniquely identifies an {@link AdminRule}, all properties are mandatory in order for the {@link
- * AdminRule}'s unique constraint to be enforced by the database, which otherwise will consider
+ * Uniquely identifies an {@link JpaAdminRule}, all properties are mandatory in order for the {@link
+ * JpaAdminRule}'s unique constraint to be enforced by the database, which otherwise will consider
  * {@literal NULL != NULL}. The {@code *} literal is used as default value.
  *
  * @since 1.0
@@ -24,7 +24,7 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 @Embeddable
-public class AdminRuleIdentifier implements Cloneable {
+public class JpaAdminRuleIdentifier implements Cloneable {
     public static final String ANY = "*";
 
     @NonNull
@@ -46,12 +46,12 @@ public class AdminRuleIdentifier implements Cloneable {
         @AttributeOverride(name = "high", column = @Column(name = "ip_high")),
         @AttributeOverride(name = "size", column = @Column(name = "ip_size"))
     })
-    private IPAddressRange addressRange = new IPAddressRange();
+    private JpaIPAddressRange addressRange = new JpaIPAddressRange();
 
-    public @Override AdminRuleIdentifier clone() {
-        AdminRuleIdentifier clone;
+    public @Override JpaAdminRuleIdentifier clone() {
+        JpaAdminRuleIdentifier clone;
         try {
-            clone = (AdminRuleIdentifier) super.clone();
+            clone = (JpaAdminRuleIdentifier) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException(e);
         }

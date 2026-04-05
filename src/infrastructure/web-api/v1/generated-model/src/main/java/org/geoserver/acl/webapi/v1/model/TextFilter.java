@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Generated;
 import java.util.Objects;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Filter for matching text properties. Supports exact matching and wildcard behavior. The matching logic is: - If value is null or absent: matches rules where the property is set to any value or is null (wildcard) - If value is \&quot;*\&quot;: matches only rules where the property is null (explicitly wildcard) - Otherwise: matches rules where the property equals the specified value

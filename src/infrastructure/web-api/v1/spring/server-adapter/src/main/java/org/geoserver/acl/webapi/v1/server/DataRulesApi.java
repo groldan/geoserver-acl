@@ -16,7 +16,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Generated;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Set;
 import org.geoserver.acl.webapi.v1.model.InsertPosition;
@@ -24,10 +25,14 @@ import org.geoserver.acl.webapi.v1.model.LayerDetails;
 import org.geoserver.acl.webapi.v1.model.Rule;
 import org.geoserver.acl.webapi.v1.model.RuleFilter;
 import org.geoserver.acl.webapi.v1.model.RuleLimits;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Generated(
         value = "org.openapitools.codegen.languages.SpringCodegen",

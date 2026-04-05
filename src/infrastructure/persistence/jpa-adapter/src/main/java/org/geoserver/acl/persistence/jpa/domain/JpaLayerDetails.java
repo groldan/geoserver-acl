@@ -5,7 +5,7 @@
  * Original from GeoFence 3.6 under GPL 2.0 license
  */
 
-package org.geoserver.acl.persistence.jpa.model;
+package org.geoserver.acl.persistence.jpa.domain;
 
 import static java.util.Objects.isNull;
 
@@ -36,7 +36,7 @@ import org.hibernate.annotations.FetchMode;
 @Data
 @Accessors(chain = true)
 @Embeddable
-public class LayerDetails implements Serializable, Cloneable {
+public class JpaLayerDetails implements Serializable, Cloneable {
 
     @Serial
     private static final long serialVersionUID = 1;
@@ -65,11 +65,11 @@ public class LayerDetails implements Serializable, Cloneable {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "ld_spatial_filter_type", nullable = true)
-    private SpatialFilterType spatialFilterType;
+    private JpaSpatialFilterType spatialFilterType;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "ld_catalog_mode", nullable = true)
-    private CatalogMode catalogMode;
+    private JpaCatalogMode catalogMode;
 
     /** Styles allowed for this layer */
     @ElementCollection(fetch = FetchType.LAZY)
@@ -89,13 +89,13 @@ public class LayerDetails implements Serializable, Cloneable {
                             columnNames = {"details_id", "name"}),
             foreignKey = @ForeignKey(name = "fk_attribute_layer"))
     @Fetch(FetchMode.SELECT)
-    private Set<LayerAttribute> attributes;
+    private Set<JpaLayerAttribute> attributes;
 
-    public @Override LayerDetails clone() {
-        LayerDetails clone;
+    public @Override JpaLayerDetails clone() {
+        JpaLayerDetails clone;
 
         try {
-            clone = (LayerDetails) super.clone();
+            clone = (JpaLayerDetails) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException(e);
         }
@@ -104,7 +104,7 @@ public class LayerDetails implements Serializable, Cloneable {
         }
         if (attributes != null) {
             clone.attributes =
-                    attributes.stream().map(LayerAttribute::clone).collect(Collectors.toCollection(HashSet::new));
+                    attributes.stream().map(JpaLayerAttribute::clone).collect(Collectors.toCollection(HashSet::new));
         }
         return clone;
     }

@@ -10,21 +10,22 @@ import org.geoserver.acl.domain.adminrules.AdminRuleEvent;
 import org.geoserver.acl.domain.adminrules.AdminRuleRepository;
 import org.geoserver.acl.domain.rules.RuleEvent;
 import org.geoserver.acl.domain.rules.RuleRepository;
+import org.geoserver.acl.persistence.jpa.adaptor.AdminRuleJpaMapper;
+import org.geoserver.acl.persistence.jpa.adaptor.AdminRuleJpaMapperImpl;
 import org.geoserver.acl.persistence.jpa.adaptor.AdminRuleRepositoryJpaAdaptor;
+import org.geoserver.acl.persistence.jpa.adaptor.IPAddressRangeJpaMapperImpl;
+import org.geoserver.acl.persistence.jpa.adaptor.RuleJpaMapper;
+import org.geoserver.acl.persistence.jpa.adaptor.RuleJpaMapperImpl;
 import org.geoserver.acl.persistence.jpa.adaptor.RuleRepositoryJpaAdaptor;
 import org.geoserver.acl.persistence.jpa.domain.JpaAdminRuleRepository;
 import org.geoserver.acl.persistence.jpa.domain.JpaRuleRepository;
-import org.geoserver.acl.persistence.jpa.mapper.AdminRuleJpaMapper;
-import org.geoserver.acl.persistence.jpa.mapper.RuleJpaMapper;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 @Configuration(proxyBeanMethods = false)
 @Import({AclDataSourceConfiguration.class, AuthorizationJPAConfiguration.class})
-@ComponentScan(basePackageClasses = {RuleJpaMapper.class, AdminRuleJpaMapper.class})
 public class JPAIntegrationConfiguration {
 
     @Bean
@@ -51,5 +52,15 @@ public class JPAIntegrationConfiguration {
         Consumer<AdminRuleEvent> publisher = eventPublisher::publishEvent;
         adaptor.setEventPublisher(publisher);
         return adaptor;
+    }
+
+    @Bean
+    RuleJpaMapper ruleJpaMapper() {
+        return new RuleJpaMapperImpl(new IPAddressRangeJpaMapperImpl());
+    }
+
+    @Bean
+    AdminRuleJpaMapper adminRuleJpaMapper() {
+        return new AdminRuleJpaMapperImpl(new IPAddressRangeJpaMapperImpl());
     }
 }

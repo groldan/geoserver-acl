@@ -20,11 +20,6 @@ import java.util.stream.IntStream;
 import org.geoserver.acl.config.persistence.jpa.AclDataSourceConfiguration;
 import org.geoserver.acl.config.persistence.jpa.AuthorizationJPAConfiguration;
 import org.geoserver.acl.config.persistence.jpa.AuthorizationJPAPropertiesTestConfiguration;
-import org.geoserver.acl.persistence.jpa.model.AdminGrantType;
-import org.geoserver.acl.persistence.jpa.model.AdminRule;
-import org.geoserver.acl.persistence.jpa.model.AdminRuleIdentifier;
-import org.geoserver.acl.persistence.jpa.model.IPAddressRange;
-import org.geoserver.acl.persistence.jpa.model.QAdminRule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,33 +42,33 @@ public class JpaAdminRuleRepositoryTest {
 
     private @Autowired EntityManager em;
 
-    private AdminRule entity;
+    private JpaAdminRule entity;
 
     @BeforeEach
     void beforeEach() {
-        entity = new AdminRule();
+        entity = new JpaAdminRule();
     }
 
     @Test
     void testDefaultValues() {
-        AdminRule rule = new AdminRule();
+        JpaAdminRule rule = new JpaAdminRule();
         assertNotNull(rule.getIdentifier());
-        AdminRuleIdentifier identifier = rule.getIdentifier();
+        JpaAdminRuleIdentifier identifier = rule.getIdentifier();
         assertEquals("*", identifier.getRolename());
         assertEquals("*", identifier.getUsername());
         assertEquals("*", identifier.getWorkspace());
-        assertEquals(AdminGrantType.USER, rule.getAccess());
-        assertEquals(IPAddressRange.noData(), identifier.getAddressRange());
+        assertEquals(JpaAdminGrantType.USER, rule.getAccess());
+        assertEquals(JpaIPAddressRange.noData(), identifier.getAddressRange());
 
         rule = repo.saveAndFlush(rule);
-        AdminRule saved = repo.getReferenceById(rule.getId());
+        JpaAdminRule saved = repo.getReferenceById(rule.getId());
         assertThat(saved).isEqualTo(rule);
     }
 
     @Test
     void testMandatoryProperties() {
         // non nullable attributes in RuleIdentified can't even be set to null
-        AdminRuleIdentifier identifier = entity.getIdentifier();
+        JpaAdminRuleIdentifier identifier = entity.getIdentifier();
         assertThrows(NullPointerException.class, () -> identifier.setAddressRange(null));
         assertThrows(NullPointerException.class, () -> identifier.setRolename(null));
         assertThrows(NullPointerException.class, () -> identifier.setUsername(null));
@@ -88,18 +83,18 @@ public class JpaAdminRuleRepositoryTest {
 
     @Test
     void testSaveDuplicateIdentifier() {
-        entity.setAccess(AdminGrantType.ADMIN)
+        entity.setAccess(JpaAdminGrantType.ADMIN)
                 .getIdentifier()
-                .setAddressRange(new IPAddressRange(1000L, 2000L, 32))
+                .setAddressRange(new JpaIPAddressRange(1000L, 2000L, 32))
                 .setRolename("ROLE_USER")
                 .setWorkspace("workspace");
 
         testSaveDuplicateIdentifier(entity);
     }
 
-    private void testSaveDuplicateIdentifier(AdminRule rule) {
+    private void testSaveDuplicateIdentifier(JpaAdminRule rule) {
         rule = rule.clone().setId(null);
-        AdminRule duplicateKey = rule.clone().setPriority(rule.getPriority() + 1000);
+        JpaAdminRule duplicateKey = rule.clone().setPriority(rule.getPriority() + 1000);
         assertEquals(rule.getIdentifier(), duplicateKey.getIdentifier());
 
         repo.saveAndFlush(rule);
@@ -109,55 +104,55 @@ public class JpaAdminRuleRepositoryTest {
 
     @Test
     void testSave_Identifier() {
-        AdminRuleIdentifier expected = entity.getIdentifier()
-                .setAddressRange(new IPAddressRange(1000L, 2000L, 32))
+        JpaAdminRuleIdentifier expected = entity.getIdentifier()
+                .setAddressRange(new JpaIPAddressRange(1000L, 2000L, 32))
                 .setRolename("ROLE_USER")
                 .setUsername("user")
                 .setWorkspace("workspace")
                 .clone();
 
-        AdminRule saved = repo.saveAndFlush(entity);
+        JpaAdminRule saved = repo.saveAndFlush(entity);
         em.detach(saved);
 
-        AdminRule found = repo.getReferenceById(saved.getId());
+        JpaAdminRule found = repo.getReferenceById(saved.getId());
         assertThat(found.getIdentifier()).isNotSameAs(saved.getIdentifier()).isEqualTo(expected);
     }
 
     @Test
     void findAll() {
-        List<AdminRule> expected = addSamplesInReverseNaturalOrder();
-        List<AdminRule> actual = repo.findAll();
+        List<JpaAdminRule> expected = addSamplesInReverseNaturalOrder();
+        List<JpaAdminRule> actual = repo.findAll();
         assertEquals(Set.copyOf(expected), Set.copyOf(actual));
     }
 
     @Test
     void findAllNaturalOrderFiltered() {
-        final List<AdminRule> all = addSamplesInReverseNaturalOrder();
+        final List<JpaAdminRule> all = addSamplesInReverseNaturalOrder();
 
-        QAdminRule qadm = QAdminRule.adminRule;
+        QJpaAdminRule qadm = QJpaAdminRule.jpaAdminRule;
         Predicate predicate = qadm.priority.gt(2L).and(qadm.identifier.workspace.eq("*"));
 
-        List<AdminRule> expected = all.stream()
+        List<JpaAdminRule> expected = all.stream()
                 .filter(r ->
                         r.getPriority() > 2L && "*".equals(r.getIdentifier().getWorkspace()))
                 .toList();
 
-        Iterable<AdminRule> res = repo.findAll(predicate, Sort.by("priority"));
-        List<AdminRule> actual = new ArrayList<>();
+        Iterable<JpaAdminRule> res = repo.findAll(predicate, Sort.by("priority"));
+        List<JpaAdminRule> actual = new ArrayList<>();
         res.forEach(actual::add);
         assertThat(actual.size()).isEqualTo(expected.size());
         assertThat(actual).isEqualTo(expected);
     }
 
     /** Adds sample rules in reverse natural order and returns them in natural order */
-    private List<AdminRule> addSamplesInReverseNaturalOrder() {
-        AdminRule rule = this.entity;
-        List<AdminRule> expected = new ArrayList<>();
+    private List<JpaAdminRule> addSamplesInReverseNaturalOrder() {
+        JpaAdminRule rule = this.entity;
+        List<JpaAdminRule> expected = new ArrayList<>();
 
-        rule.setAccess(AdminGrantType.ADMIN).getIdentifier();
+        rule.setAccess(JpaAdminGrantType.ADMIN).getIdentifier();
         expected.add(rule.clone());
 
-        rule.getIdentifier().setAddressRange(new IPAddressRange(1000L, 2000L, 32));
+        rule.getIdentifier().setAddressRange(new JpaIPAddressRange(1000L, 2000L, 32));
         expected.add(rule.clone());
 
         rule.getIdentifier().setRolename("rolename");
@@ -171,9 +166,9 @@ public class JpaAdminRuleRepositoryTest {
 
         IntStream.range(0, expected.size()).forEach(p -> expected.get(p).setPriority(p));
 
-        List<AdminRule> reversed = new ArrayList<>(expected);
+        List<JpaAdminRule> reversed = new ArrayList<>(expected);
         Collections.reverse(reversed);
-        for (AdminRule r : reversed) {
+        for (JpaAdminRule r : reversed) {
             repo.saveAndFlush(r);
         }
 

@@ -5,7 +5,6 @@
 package org.geoserver.acl.webapi.client;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,9 +17,7 @@ import org.geoserver.acl.authorization.AdminAccessRequest;
 import org.geoserver.acl.authorization.AuthorizationService;
 import org.geoserver.acl.domain.rules.Rule;
 import org.geoserver.acl.webapi.v1.client.AuthorizationApi;
-import org.geoserver.acl.webapi.v1.mapper.AuthorizationModelApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.AuthorizationModelApiMapperImpl;
-import org.geoserver.acl.webapi.v1.mapper.RuleApiMapper;
+import org.geoserver.acl.webapi.v1.mapper.AclApiModelMapper;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -28,10 +25,7 @@ class AuthorizationServiceClientAdaptor implements AuthorizationService {
 
     private final @NonNull AuthorizationApi apiClient;
 
-    private final @NonNull RuleApiMapper ruleMapper = DomainMappers.ruleApiMapper();
-
-    private final @NonNull AuthorizationModelApiMapper mapper =
-            new AuthorizationModelApiMapperImpl(DomainMappers.geometryMapper());
+    private final @NonNull AclApiModelMapper mapper = new AclApiModelMapper();
 
     @Override
     public AccessInfo getAccessInfo(@NonNull AccessRequest request) {
@@ -71,7 +65,7 @@ class AuthorizationServiceClientAdaptor implements AuthorizationService {
         try {
             apiRequest = mapper.toApi(request);
             apiResponse = apiClient.getMatchingRules(apiRequest);
-            return apiResponse.stream().map(ruleMapper::toModel).collect(Collectors.toList());
+            return apiResponse.stream().map(mapper::toModel).toList();
         } catch (RuntimeException e) {
             log.error("Error getting matching rules for {}", request, e);
             throw e;

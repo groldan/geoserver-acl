@@ -21,7 +21,7 @@ import org.mapstruct.ReportingPolicy;
         nullValueMappingStrategy = NullValueMappingStrategy.RETURN_DEFAULT,
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
         uses = {OptionalApiMapper.class, GeometryApiMapper.class, EnumsApiMapper.class})
-public interface AdminRuleApiMapper {
+interface AdminRuleApiMapper {
 
     @Mapping(target = "identifier.username", source = "user")
     @Mapping(target = "identifier.rolename", source = "role")

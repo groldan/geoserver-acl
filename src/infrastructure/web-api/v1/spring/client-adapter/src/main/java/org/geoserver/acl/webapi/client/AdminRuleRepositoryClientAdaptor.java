@@ -18,18 +18,14 @@ import org.geoserver.acl.domain.adminrules.AdminRuleRepository;
 import org.geoserver.acl.domain.adminrules.InsertPosition;
 import org.geoserver.acl.domain.filter.RuleQuery;
 import org.geoserver.acl.webapi.v1.client.WorkspaceAdminRulesApi;
-import org.geoserver.acl.webapi.v1.mapper.AdminRuleApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.EnumsApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.RuleFilterApiMapper;
+import org.geoserver.acl.webapi.v1.mapper.AclApiModelMapper;
 import org.springframework.web.client.HttpClientErrorException;
 
 @RequiredArgsConstructor
 class AdminRuleRepositoryClientAdaptor implements AdminRuleRepository {
 
-    private final WorkspaceAdminRulesApi apiClient;
-    private final AdminRuleApiMapper mapper = DomainMappers.adminRuleApiMapper();
-    private final EnumsApiMapper enumsMapper = DomainMappers.enumsApiMapper();
-    private final RuleFilterApiMapper filterMapper = DomainMappers.ruleFilterApiMapper();
+    private final @NonNull WorkspaceAdminRulesApi apiClient;
+    private final @NonNull AclApiModelMapper mapper = new AclApiModelMapper();
 
     @Override
     public AdminRule create(AdminRule rule, InsertPosition position) {
@@ -76,7 +72,7 @@ class AdminRuleRepositoryClientAdaptor implements AdminRuleRepository {
     @Override
     public Stream<AdminRule> findAll(RuleQuery<AdminRuleFilter> query) {
         org.geoserver.acl.webapi.v1.model.AdminRuleFilter filter =
-                query.getFilter().map(filterMapper::map).orElse(null);
+                query.getFilter().map(mapper::toApi).orElse(null);
 
         Integer limit = query.getLimit();
         String nextCursor = query.getNextId();
@@ -143,7 +139,7 @@ class AdminRuleRepositoryClientAdaptor implements AdminRuleRepository {
     }
 
     private org.geoserver.acl.webapi.v1.model.AdminRuleFilter map(AdminRuleFilter filter) {
-        return filterMapper.map(filter);
+        return mapper.toApi(filter);
     }
 
     private org.geoserver.acl.webapi.v1.model.AdminRule map(AdminRule rule) {
@@ -155,6 +151,6 @@ class AdminRuleRepositoryClientAdaptor implements AdminRuleRepository {
     }
 
     private org.geoserver.acl.webapi.v1.model.InsertPosition map(InsertPosition position) {
-        return enumsMapper.map(position);
+        return mapper.toApi(position);
     }
 }

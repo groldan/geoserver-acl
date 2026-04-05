@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 import javax.annotation.processing.Generated;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The result of evaluating admin rules for workspace access. Indicates whether the user has administrative privileges on the workspace.

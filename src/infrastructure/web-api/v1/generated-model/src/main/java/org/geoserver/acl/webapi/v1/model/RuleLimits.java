@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Generated;
 import jakarta.validation.Valid;
 import java.util.Objects;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Spatial and catalog restrictions applied when a rule&#39;s access type is LIMIT. Allows you to grant access to a resource while constraining what data can be accessed or how it appears.

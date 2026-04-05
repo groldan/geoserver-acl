@@ -26,7 +26,7 @@ import org.mapstruct.ReportingPolicy;
             GeometryApiMapper.class,
             RuleLimitsApiMapper.class
         })
-public interface RuleApiMapper {
+interface RuleApiMapper {
 
     @Mapping(target = "identifier.access", source = "access")
     @Mapping(target = "identifier.username", source = "user")

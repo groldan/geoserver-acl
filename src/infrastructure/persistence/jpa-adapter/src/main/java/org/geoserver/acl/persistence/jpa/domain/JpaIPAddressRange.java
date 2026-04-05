@@ -5,7 +5,7 @@
  * Original from GeoFence 3.6 under GPL 2.0 license
  */
 
-package org.geoserver.acl.persistence.jpa.model;
+package org.geoserver.acl.persistence.jpa.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -23,7 +23,7 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Embeddable
-public class IPAddressRange implements Cloneable {
+public class JpaIPAddressRange implements Cloneable {
 
     public static final long NULL = -1L;
 
@@ -36,15 +36,15 @@ public class IPAddressRange implements Cloneable {
     @Column(nullable = false)
     private int size = (int) NULL;
 
-    public @Override IPAddressRange clone() {
-        return new IPAddressRange(low, high, size);
+    public @Override JpaIPAddressRange clone() {
+        return new JpaIPAddressRange(low, high, size);
     }
 
     /**
      * @return a new no_data value instance with all fields set to {@code -1}
      */
-    public static IPAddressRange noData() {
-        return new IPAddressRange();
+    public static JpaIPAddressRange noData() {
+        return new JpaIPAddressRange();
     }
 
     public boolean isEmpty() {

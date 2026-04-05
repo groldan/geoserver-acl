@@ -16,7 +16,7 @@ import org.geoserver.acl.webapi.v1.model.Geom;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
-public interface GeometryApiMapper {
+interface GeometryApiMapper {
 
     Pattern pattern = Pattern.compile("((SRID=(\\d+))\\s*;)?\\s*(MULTIPOLYGON.*)");
 

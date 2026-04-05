@@ -2,28 +2,16 @@
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
-package org.geoserver.acl.webapi.client;
+package org.geoserver.acl.webapi.v1.mapper;
 
 import lombok.experimental.UtilityClass;
-import org.geoserver.acl.webapi.v1.mapper.AdminRuleApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.AdminRuleApiMapperImpl;
-import org.geoserver.acl.webapi.v1.mapper.EnumsApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.EnumsApiMapperImpl;
-import org.geoserver.acl.webapi.v1.mapper.GeometryApiMapperImpl;
-import org.geoserver.acl.webapi.v1.mapper.LayerAttributeApiMapperImpl;
-import org.geoserver.acl.webapi.v1.mapper.LayerDetailsApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.LayerDetailsApiMapperImpl;
-import org.geoserver.acl.webapi.v1.mapper.RuleApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.RuleApiMapperImpl;
-import org.geoserver.acl.webapi.v1.mapper.RuleFilterApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.RuleLimitsApiMapper;
-import org.geoserver.acl.webapi.v1.mapper.RuleLimitsApiMapperImpl;
 
 @UtilityClass
 class DomainMappers {
 
     private RuleFilterApiMapper ruleFilterApiMapper;
     private AdminRuleApiMapperImpl adminRuleApiMapper;
+    private AuthorizationModelApiMapper authorizationApiMapper;
     private EnumsApiMapperImpl enumsApiMapper;
     private RuleApiMapperImpl ruleApiMapper;
     private RuleLimitsApiMapperImpl ruleLimitsApiMapper;
@@ -38,6 +26,13 @@ class DomainMappers {
     public AdminRuleApiMapper adminRuleApiMapper() {
         if (null == adminRuleApiMapper) adminRuleApiMapper = new AdminRuleApiMapperImpl(enumsApiMapper());
         return adminRuleApiMapper;
+    }
+
+    public AuthorizationModelApiMapper authorizationApiMapper() {
+        if (null == authorizationApiMapper) {
+            authorizationApiMapper = new AuthorizationModelApiMapperImpl(geometryMapper());
+        }
+        return authorizationApiMapper;
     }
 
     public EnumsApiMapper enumsApiMapper() {

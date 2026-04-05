@@ -4,9 +4,9 @@
  *
  * Original from GeoFence 3.6 under GPL 2.0 license
  */
-package org.geoserver.acl.persistence.jpa.model;
+package org.geoserver.acl.persistence.jpa.domain;
 
-public enum GrantType {
+public enum JpaGrantType {
     ALLOW,
     DENY,
     LIMIT

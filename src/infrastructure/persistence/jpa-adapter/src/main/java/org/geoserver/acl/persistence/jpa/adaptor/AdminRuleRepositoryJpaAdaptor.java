@@ -4,7 +4,7 @@
  */
 package org.geoserver.acl.persistence.jpa.adaptor;
 
-import static org.geoserver.acl.persistence.jpa.mapper.AdminRuleJpaMapper.decodeId;
+import static org.geoserver.acl.persistence.jpa.adaptor.AdminRuleJpaMapper.decodeId;
 
 import com.querydsl.core.CloseableIterator;
 import com.querydsl.core.types.Order;
@@ -33,14 +33,12 @@ import org.geoserver.acl.domain.adminrules.AdminRuleRepository;
 import org.geoserver.acl.domain.adminrules.InsertPosition;
 import org.geoserver.acl.domain.filter.RuleQuery;
 import org.geoserver.acl.domain.filter.predicate.IPAddressRangeFilter;
+import org.geoserver.acl.persistence.jpa.domain.JpaAdminRuleIdentifier;
 import org.geoserver.acl.persistence.jpa.domain.JpaAdminRuleRepository;
+import org.geoserver.acl.persistence.jpa.domain.QJpaAdminRule;
 import org.geoserver.acl.persistence.jpa.domain.TransactionReadOnly;
 import org.geoserver.acl.persistence.jpa.domain.TransactionRequired;
 import org.geoserver.acl.persistence.jpa.domain.TransactionSupported;
-import org.geoserver.acl.persistence.jpa.mapper.AdminRuleJpaMapper;
-import org.geoserver.acl.persistence.jpa.mapper.RuleJpaMapper;
-import org.geoserver.acl.persistence.jpa.model.AdminRuleIdentifier;
-import org.geoserver.acl.persistence.jpa.model.QAdminRule;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 
@@ -67,8 +65,8 @@ public class AdminRuleRepositoryJpaAdaptor implements AdminRuleRepository {
         this.queryMapper = new PredicateMapper();
     }
 
-    private PriorityResolver<org.geoserver.acl.persistence.jpa.model.AdminRule> priorityResolver() {
-        return new PriorityResolver<>(jparepo, org.geoserver.acl.persistence.jpa.model.AdminRule::getPriority);
+    private PriorityResolver<org.geoserver.acl.persistence.jpa.domain.JpaAdminRule> priorityResolver() {
+        return new PriorityResolver<>(jparepo, org.geoserver.acl.persistence.jpa.domain.JpaAdminRule::getPriority);
     }
 
     // send an updated event for all collaterally updated rule
@@ -88,13 +86,13 @@ public class AdminRuleRepositoryJpaAdaptor implements AdminRuleRepository {
         if (rule.getPriority() < 0)
             throw new IllegalArgumentException("Negative priority is not allowed: " + rule.getPriority());
 
-        PriorityResolver<org.geoserver.acl.persistence.jpa.model.AdminRule> priorityResolver = priorityResolver();
+        PriorityResolver<org.geoserver.acl.persistence.jpa.domain.JpaAdminRule> priorityResolver = priorityResolver();
         final long finalPriority = priorityResolver.resolveFinalPriority(rule.getPriority(), map(position));
 
-        org.geoserver.acl.persistence.jpa.model.AdminRule entity = modelMapper.toEntity(rule);
+        org.geoserver.acl.persistence.jpa.domain.JpaAdminRule entity = modelMapper.toEntity(rule);
         entity.setPriority(finalPriority);
 
-        org.geoserver.acl.persistence.jpa.model.AdminRule saved;
+        org.geoserver.acl.persistence.jpa.domain.JpaAdminRule saved;
         try {
             // gotta use saveAndFlush to catch the exception before the method returns and the tx is
             // committed
@@ -137,7 +135,7 @@ public class AdminRuleRepositoryJpaAdaptor implements AdminRuleRepository {
 
     @Override
     public Optional<AdminRule> findOneByPriority(long priority) {
-        Predicate predicate = QAdminRule.adminRule.priority.goe(priority);
+        Predicate predicate = QJpaAdminRule.jpaAdminRule.priority.goe(priority);
         try {
             return jparepo.findOne(predicate).map(modelMapper::toModel);
         } catch (IncorrectResultSizeDataAccessException e) {
@@ -158,9 +156,9 @@ public class AdminRuleRepositoryJpaAdaptor implements AdminRuleRepository {
         Objects.requireNonNull(rule.getId());
         findDup(rule).ifPresent(dup -> throwConflict(dup, null));
 
-        org.geoserver.acl.persistence.jpa.model.AdminRule entity = getOrThrowIAE(rule.getId());
+        org.geoserver.acl.persistence.jpa.domain.JpaAdminRule entity = getOrThrowIAE(rule.getId());
 
-        PriorityResolver<org.geoserver.acl.persistence.jpa.model.AdminRule> priorityResolver = priorityResolver();
+        PriorityResolver<org.geoserver.acl.persistence.jpa.domain.JpaAdminRule> priorityResolver = priorityResolver();
         long finalPriority = priorityResolver.resolvePriorityUpdate(entity.getPriority(), rule.getPriority());
 
         modelMapper.updateEntity(entity, rule);
@@ -168,7 +166,7 @@ public class AdminRuleRepositoryJpaAdaptor implements AdminRuleRepository {
 
         try {
             jparepo.flush();
-            org.geoserver.acl.persistence.jpa.model.AdminRule saved = jparepo.saveAndFlush(entity);
+            org.geoserver.acl.persistence.jpa.domain.JpaAdminRule saved = jparepo.saveAndFlush(entity);
             notifyCollateralUpdates(priorityResolver.getUpdatedIds());
             return modelMapper.toModel(saved);
         } catch (DataIntegrityViolationException e) {
@@ -190,12 +188,13 @@ public class AdminRuleRepositoryJpaAdaptor implements AdminRuleRepository {
 
         if (query.getNextId() != null) {
             Long nextId = decodeId(query.getNextId());
-            predicate = QAdminRule.adminRule.id.goe(nextId).and(predicate);
+            predicate = QJpaAdminRule.jpaAdminRule.id.goe(nextId).and(predicate);
         }
 
-        CloseableIterator<org.geoserver.acl.persistence.jpa.model.AdminRule> iterator = queryOrderByPriority(predicate);
+        CloseableIterator<org.geoserver.acl.persistence.jpa.domain.JpaAdminRule> iterator =
+                queryOrderByPriority(predicate);
 
-        try (Stream<org.geoserver.acl.persistence.jpa.model.AdminRule> stream = stream(iterator)) {
+        try (Stream<org.geoserver.acl.persistence.jpa.domain.JpaAdminRule> stream = stream(iterator)) {
             Stream<AdminRule> rules = stream.map(modelMapper::toModel).filter(postFilter);
             if (null != query.getLimit()) {
                 rules = rules.limit(query.getLimit());
@@ -204,18 +203,18 @@ public class AdminRuleRepositoryJpaAdaptor implements AdminRuleRepository {
         }
     }
 
-    private CloseableIterator<org.geoserver.acl.persistence.jpa.model.AdminRule> queryOrderByPriority(
+    private CloseableIterator<org.geoserver.acl.persistence.jpa.domain.JpaAdminRule> queryOrderByPriority(
             Predicate predicate) {
 
-        return new JPAQuery<org.geoserver.acl.persistence.jpa.model.AdminRule>(em)
-                .from(QAdminRule.adminRule)
+        return new JPAQuery<org.geoserver.acl.persistence.jpa.domain.JpaAdminRule>(em)
+                .from(QJpaAdminRule.jpaAdminRule)
                 .where(predicate)
-                .orderBy(new OrderSpecifier<>(Order.ASC, QAdminRule.adminRule.priority))
+                .orderBy(new OrderSpecifier<>(Order.ASC, QJpaAdminRule.jpaAdminRule.priority))
                 .iterate();
     }
 
-    private Stream<org.geoserver.acl.persistence.jpa.model.AdminRule> stream(
-            CloseableIterator<org.geoserver.acl.persistence.jpa.model.AdminRule> iterator) {
+    private Stream<org.geoserver.acl.persistence.jpa.domain.JpaAdminRule> stream(
+            CloseableIterator<org.geoserver.acl.persistence.jpa.domain.JpaAdminRule> iterator) {
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false)
                 .onClose(iterator::close);
     }
@@ -242,8 +241,8 @@ public class AdminRuleRepositoryJpaAdaptor implements AdminRuleRepository {
     @Override
     @TransactionRequired
     public void swap(@NonNull String id1, @NonNull String id2) {
-        org.geoserver.acl.persistence.jpa.model.AdminRule rule1 = getOrThrowIAE(id1);
-        org.geoserver.acl.persistence.jpa.model.AdminRule rule2 = getOrThrowIAE(id2);
+        org.geoserver.acl.persistence.jpa.domain.JpaAdminRule rule1 = getOrThrowIAE(id1);
+        org.geoserver.acl.persistence.jpa.domain.JpaAdminRule rule2 = getOrThrowIAE(id2);
 
         long p1 = rule1.getPriority();
         long p2 = rule2.getPriority();
@@ -268,8 +267,8 @@ public class AdminRuleRepositoryJpaAdaptor implements AdminRuleRepository {
         return count;
     }
 
-    private org.geoserver.acl.persistence.jpa.model.AdminRule getOrThrowIAE(@NonNull String ruleId) {
-        org.geoserver.acl.persistence.jpa.model.AdminRule rule;
+    private org.geoserver.acl.persistence.jpa.domain.JpaAdminRule getOrThrowIAE(@NonNull String ruleId) {
+        org.geoserver.acl.persistence.jpa.domain.JpaAdminRule rule;
         try {
             rule = jparepo.getReferenceById(decodeId(ruleId));
         } catch (EntityNotFoundException e) {
@@ -281,9 +280,9 @@ public class AdminRuleRepositoryJpaAdaptor implements AdminRuleRepository {
     private Optional<AdminRule> findDup(AdminRule rule) {
 
         final Long id = decodeId(rule.getId());
-        final AdminRuleIdentifier identifier = modelMapper.toEntity(rule.getIdentifier());
+        final JpaAdminRuleIdentifier identifier = modelMapper.toEntity(rule.getIdentifier());
 
-        List<org.geoserver.acl.persistence.jpa.model.AdminRule> matches;
+        List<org.geoserver.acl.persistence.jpa.domain.JpaAdminRule> matches;
         matches = jparepo.findAllByIdentifier(identifier);
 
         return matches.stream().filter(r -> !r.getId().equals(id)).findFirst().map(modelMapper::toModel);
