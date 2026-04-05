@@ -65,6 +65,15 @@ public class AdminRuleRepositoryJpaAdaptor implements AdminRuleRepository {
         this.queryMapper = new PredicateMapper();
     }
 
+    private static final long PRIORITY_LOCK_ID = "acl_adminrule_priority".hashCode();
+
+    /** Acquires a transaction-scoped advisory lock to serialize priority modifications across instances. */
+    private void lockPrioritiesForUpdate() {
+        em.createNativeQuery("SELECT pg_advisory_xact_lock(:lockId)")
+                .setParameter("lockId", PRIORITY_LOCK_ID)
+                .getSingleResult();
+    }
+
     private PriorityResolver<org.geoserver.acl.persistence.jpa.domain.JpaAdminRule> priorityResolver() {
         return new PriorityResolver<>(jparepo, org.geoserver.acl.persistence.jpa.domain.JpaAdminRule::getPriority);
     }
@@ -80,6 +89,7 @@ public class AdminRuleRepositoryJpaAdaptor implements AdminRuleRepository {
     @Override
     @TransactionRequired
     public AdminRule create(AdminRule rule, InsertPosition position) {
+        lockPrioritiesForUpdate();
         if (null != rule.getId()) throw new IllegalArgumentException("Rule must have no id");
         findDup(rule).ifPresent(dup -> throwConflict(dup, null));
 
@@ -135,7 +145,7 @@ public class AdminRuleRepositoryJpaAdaptor implements AdminRuleRepository {
 
     @Override
     public Optional<AdminRule> findOneByPriority(long priority) {
-        Predicate predicate = QJpaAdminRule.jpaAdminRule.priority.goe(priority);
+        Predicate predicate = QJpaAdminRule.jpaAdminRule.priority.eq(priority);
         try {
             return jparepo.findOne(predicate).map(modelMapper::toModel);
         } catch (IncorrectResultSizeDataAccessException e) {
@@ -152,7 +162,7 @@ public class AdminRuleRepositoryJpaAdaptor implements AdminRuleRepository {
     @Override
     @TransactionRequired
     public AdminRule save(AdminRule rule) {
-
+        lockPrioritiesForUpdate();
         Objects.requireNonNull(rule.getId());
         findDup(rule).ifPresent(dup -> throwConflict(dup, null));
 
@@ -229,6 +239,7 @@ public class AdminRuleRepositoryJpaAdaptor implements AdminRuleRepository {
     @Override
     @TransactionRequired
     public int shiftPriority(long priorityStart, long offset) {
+        lockPrioritiesForUpdate();
         Set<Long> shiftedIds = jparepo.streamIdsByShiftPriority(priorityStart).collect(Collectors.toSet());
         if (shiftedIds.isEmpty()) {
             return -1;
@@ -241,16 +252,11 @@ public class AdminRuleRepositoryJpaAdaptor implements AdminRuleRepository {
     @Override
     @TransactionRequired
     public void swap(@NonNull String id1, @NonNull String id2) {
+        lockPrioritiesForUpdate();
         org.geoserver.acl.persistence.jpa.domain.JpaAdminRule rule1 = getOrThrowIAE(id1);
         org.geoserver.acl.persistence.jpa.domain.JpaAdminRule rule2 = getOrThrowIAE(id2);
 
-        long p1 = rule1.getPriority();
-        long p2 = rule2.getPriority();
-
-        rule1.setPriority(p2);
-        rule2.setPriority(p1);
-
-        jparepo.saveAll(List.of(rule1, rule2));
+        jparepo.swapPriorities(rule1.getId(), rule1.getPriority(), rule2.getId(), rule2.getPriority());
     }
 
     @Override

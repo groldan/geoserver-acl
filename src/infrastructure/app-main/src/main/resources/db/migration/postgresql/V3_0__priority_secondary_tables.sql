@@ -23,11 +23,16 @@ CREATE TABLE acl_adminrule_priority (
 INSERT INTO acl_rule_priority (id, priority) SELECT id, priority FROM acl_rule;
 INSERT INTO acl_adminrule_priority (id, priority) SELECT id, priority FROM acl_adminrule;
 
--- Drop old indexes, create new ones on secondary tables (reuse names)
+-- Drop old indexes, add unique deferrable constraints on secondary tables.
+-- DEFERRABLE INITIALLY DEFERRED: constraint is checked at transaction commit, not per-statement.
+-- This allows shiftPrioritiesBetween() and swap() to create temporary duplicates within a TX.
+-- The unique constraint also implicitly creates an index.
 DROP INDEX IF EXISTS idx_rule_priority;
 DROP INDEX IF EXISTS idx_adminrule_priority;
-CREATE INDEX idx_rule_priority ON acl_rule_priority (priority);
-CREATE INDEX idx_adminrule_priority ON acl_adminrule_priority (priority);
+ALTER TABLE acl_rule_priority
+    ADD CONSTRAINT uq_rule_priority UNIQUE (priority) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE acl_adminrule_priority
+    ADD CONSTRAINT uq_adminrule_priority UNIQUE (priority) DEFERRABLE INITIALLY DEFERRED;
 
 -- Drop old columns
 ALTER TABLE acl_rule DROP COLUMN priority;

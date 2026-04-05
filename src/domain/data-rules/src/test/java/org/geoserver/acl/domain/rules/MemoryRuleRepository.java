@@ -49,14 +49,19 @@ public class MemoryRuleRepository extends MemoryPriorityRepository<Rule> impleme
 
     @Override
     public Rule create(Rule rule, InsertPosition position) {
-        if (null != rule.getId()) throw new IllegalArgumentException("Rule has id");
-        checkNoDups(rule);
-        rule = rule.withId(String.valueOf(idseq.incrementAndGet()));
+        priorityLock.lock();
+        try {
+            if (null != rule.getId()) throw new IllegalArgumentException("Rule has id");
+            checkNoDups(rule);
+            rule = rule.withId(String.valueOf(idseq.incrementAndGet()));
 
-        long finalPriority = priorityResolver.resolveFinalPriority(rule.getPriority(), map(position));
-        rule = rule.withPriority(finalPriority);
-        rules.add(rule);
-        return rule;
+            long finalPriority = priorityResolver.resolveFinalPriority(rule.getPriority(), map(position));
+            rule = rule.withPriority(finalPriority);
+            rules.add(rule);
+            return rule;
+        } finally {
+            priorityLock.unlock();
+        }
     }
 
     private Position map(InsertPosition position) {
@@ -74,28 +79,34 @@ public class MemoryRuleRepository extends MemoryPriorityRepository<Rule> impleme
 
     @Override
     public Rule save(Rule rule) {
-        if (null == rule.getId()) throw new IllegalArgumentException("Rule has no id");
-        checkNoDups(rule);
-        final Rule current = getOrThrow(rule.getId());
+        priorityLock.lock();
+        try {
+            if (null == rule.getId()) throw new IllegalArgumentException("Rule has no id");
+            checkNoDups(rule);
+            final Rule current = getOrThrow(rule.getId());
 
-        final long finalPriority = priorityResolver.resolvePriorityUpdate(current.getPriority(), rule.getPriority());
+            final long finalPriority =
+                    priorityResolver.resolvePriorityUpdate(current.getPriority(), rule.getPriority());
 
-        if (current.getPriority() != finalPriority) {
-            rule = rule.withPriority(finalPriority);
-            Optional<Rule> positionOccupied =
-                    findOneByPriority(finalPriority).filter(r -> !r.getId().equals(current.getId()));
-            if (positionOccupied.isPresent()) {
-                Rule other = positionOccupied.get();
-                rules.remove(current);
-                save(other.withPriority(other.getPriority() + 1));
-                rules.add(rule);
+            if (current.getPriority() != finalPriority) {
+                rule = rule.withPriority(finalPriority);
+                Optional<Rule> positionOccupied =
+                        findOneByPriority(finalPriority).filter(r -> !r.getId().equals(current.getId()));
+                if (positionOccupied.isPresent()) {
+                    Rule other = positionOccupied.get();
+                    rules.remove(current);
+                    save(other.withPriority(other.getPriority() + 1));
+                    rules.add(rule);
+                } else {
+                    replace(current, rule);
+                }
             } else {
                 replace(current, rule);
             }
-        } else {
-            replace(current, rule);
+            return rule;
+        } finally {
+            priorityLock.unlock();
         }
-        return rule;
     }
 
     /**
@@ -170,14 +181,29 @@ public class MemoryRuleRepository extends MemoryPriorityRepository<Rule> impleme
     }
 
     @Override
-    public void swap(String id1, String id2) {
-        Rule r1 = getOrThrow(id1);
-        Rule r2 = getOrThrow(id2);
+    public int shift(long priorityStart, long offset) {
+        priorityLock.lock();
+        try {
+            return super.shift(priorityStart, offset);
+        } finally {
+            priorityLock.unlock();
+        }
+    }
 
-        Rule s1 = r1.withPriority(r2.getPriority());
-        Rule s2 = r2.withPriority(r1.getPriority());
-        rules.removeAll(List.of(r1, r2));
-        rules.addAll(List.of(s1, s2));
+    @Override
+    public void swap(String id1, String id2) {
+        priorityLock.lock();
+        try {
+            Rule r1 = getOrThrow(id1);
+            Rule r2 = getOrThrow(id2);
+
+            Rule s1 = r1.withPriority(r2.getPriority());
+            Rule s2 = r2.withPriority(r1.getPriority());
+            rules.removeAll(List.of(r1, r2));
+            rules.addAll(List.of(s1, s2));
+        } finally {
+            priorityLock.unlock();
+        }
     }
 
     private Rule getOrThrow(@NonNull String id) {
