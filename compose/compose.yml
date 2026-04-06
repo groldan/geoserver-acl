@@ -27,6 +27,7 @@ services:
   acl:
     image: geoservercloud/geoserver-acl:${TAG}
     environment:
+      - AOT_MODE=on
       - PG_HOST=acldb
       - PG_PORT=5432
       - PG_DB=acl
@@ -43,7 +44,6 @@ services:
     ports:
       - 8180:8080
       - 8181:8081
-      - 15005:15005
     deploy:
       resources:
         limits:

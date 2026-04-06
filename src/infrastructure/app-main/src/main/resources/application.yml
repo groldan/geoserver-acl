@@ -50,6 +50,9 @@ spring:
   main:
     banner-mode: off
     web-application-type: servlet
+  threads:
+    virtual:
+      enabled: true
   application:
     name: acl-service
   web.error:
