@@ -22,7 +22,7 @@ permissions:
 jobs:
   # Security check for fork PRs - skipped for same-repo PRs
   security-check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     if: github.event_name == 'pull_request_target'
     outputs:
       is_fork: ${{ steps.check.outputs.is_fork }}
@@ -103,7 +103,7 @@ jobs:
           fi
 
   build-preview:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     needs: security-check
     # Run if: manual dispatch, OR (it's a PR and either same-repo or passed security check)
     if: |
@@ -259,7 +259,7 @@ jobs:
           }
 
   notify-unsafe:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     needs: security-check
     if: needs.security-check.outputs.is_fork == 'true' && needs.security-check.outputs.safe == 'false'
 
