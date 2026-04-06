@@ -25,11 +25,13 @@ ENV DEFAULT_JAVA_TOOL_OPTIONS="\
 -Djava.awt.headless=true \
 --enable-native-access=ALL-UNNAMED \
 -XX:+UseCompressedOops \
--XX:+UseCompactObjectHeaders"
+-XX:+UseCompactObjectHeaders \
+-XX:MaxRAMPercentage=80"
 
 ENV JAVA_TOOL_OPTIONS="$DEFAULT_JAVA_TOOL_OPTIONS"
 
-ENV JAVA_OPTS="-XX:MaxRAMPercentage=80 -XshowSettings:system"
+ENV JAVA_OPTS=""
+ENV AOT_MODE="on"
 
 ENV MANAGEMENT_SERVER_PORT=8081
 EXPOSE 8080
@@ -53,6 +55,9 @@ CMD curl -f -s -o /dev/null localhost:$MANAGEMENT_SERVER_PORT/actuator/health ||
 
 ARG APP_ARGS=""
 
-ENTRYPOINT [ "/bin/bash", "-c", "exec java $JAVA_OPTS $JAVA_TOOL_OPTS org.springframework.boot.loader.launch.JarLauncher \"${@}\"", "--" ]
+# Run AOT training run for faster startup
+RUN java $JAVA_TOOL_OPTS -XX:AOTCacheOutput=app.aot -Dspring.context.exit=onRefresh org.springframework.boot.loader.launch.JarLauncher --spring.profiles.active=dev
+
+ENTRYPOINT [ "/bin/bash", "-c", "exec java -XX:AOTMode=$AOT_MODE -XX:AOTCache=app.aot $JAVA_OPTS $JAVA_TOOL_OPTS org.springframework.boot.loader.launch.JarLauncher \"${@}\"", "--" ]
 
 CMD ["${APP_ARGS}"]
