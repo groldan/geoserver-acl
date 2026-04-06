@@ -27,7 +27,8 @@ services:
   acl:
     image: geoservercloud/geoserver-acl:${TAG}
     environment:
-      - AOT_MODE=on
+      - AOT_MODE=auto
+      - JAVA_OPTS=-Xlog:aot
       - PG_HOST=acldb
       - PG_PORT=5432
       - PG_DB=acl
