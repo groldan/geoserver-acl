@@ -34,4 +34,11 @@ public interface PriorityRepository<T> extends PagingAndSortingRepository<T, Lon
      * long)} with the same {@code min} and {@code max} parameters
      */
     Stream<Long> streamIdsByShiftPriorityBetween(@Param("min") long min, @Param("max") long max);
+
+    /**
+     * Swap the priorities of two rules in a single SQL statement. Avoids temporary unique constraint
+     * violations that would occur with two separate UPDATE statements.
+     */
+    void swapPriorities(
+            @Param("id1") long id1, @Param("p1") long priority1, @Param("id2") long id2, @Param("p2") long priority2);
 }

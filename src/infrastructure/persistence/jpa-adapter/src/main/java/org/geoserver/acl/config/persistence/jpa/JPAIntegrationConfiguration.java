@@ -24,8 +24,21 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+/**
+ * Central JPA integration configuration that assembles the persistence layer. Creates the
+ * {@link RuleRepository} and {@link AdminRuleRepository} adaptor beans backed by JPA, wires event
+ * publishing for cache invalidation, and instantiates MapStruct mapper implementations.
+ *
+ * <p>Imports:
+ * <ul>
+ *   <li>{@link AclDataSourceConfiguration} — datasource (JNDI or JDBC/HikariCP)
+ *   <li>{@link AuthorizationJPAConfiguration} — EntityManagerFactory, TransactionManager, JPA repositories
+ *   <li>{@link H2PgCompatConfiguration} — H2 shim for {@code pg_advisory_xact_lock}, used by the
+ *       dev profile and H2-based integration tests
+ * </ul>
+ */
 @Configuration(proxyBeanMethods = false)
-@Import({AclDataSourceConfiguration.class, AuthorizationJPAConfiguration.class})
+@Import({AclDataSourceConfiguration.class, AuthorizationJPAConfiguration.class, H2PgCompatConfiguration.class})
 public class JPAIntegrationConfiguration {
 
     @Bean

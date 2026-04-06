@@ -57,4 +57,16 @@ public interface JpaRuleRepository
     Optional<Long> findMinPriority();
 
     List<JpaRule> findAllByIdentifier(JpaRuleIdentifier identifier);
+
+    @Override
+    @TransactionRequired
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(
+            value = "UPDATE {h-schema}acl_rule_priority SET priority = CASE"
+                    + " WHEN id = :id1 THEN :p2"
+                    + " WHEN id = :id2 THEN :p1 END"
+                    + " WHERE id IN (:id1, :id2)",
+            nativeQuery = true)
+    void swapPriorities(
+            @Param("id1") long id1, @Param("p1") long priority1, @Param("id2") long id2, @Param("p2") long priority2);
 }

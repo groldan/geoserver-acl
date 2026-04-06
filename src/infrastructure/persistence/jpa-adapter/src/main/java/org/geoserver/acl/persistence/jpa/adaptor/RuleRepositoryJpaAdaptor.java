@@ -71,6 +71,15 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
         this.queryMapper = new PredicateMapper();
     }
 
+    private static final long PRIORITY_LOCK_ID = "acl_rule_priority".hashCode();
+
+    /** Acquires a transaction-scoped advisory lock to serialize priority modifications across instances. */
+    private void lockPrioritiesForUpdate() {
+        em.createNativeQuery("SELECT pg_advisory_xact_lock(:lockId)")
+                .setParameter("lockId", PRIORITY_LOCK_ID)
+                .getSingleResult();
+    }
+
     private PriorityResolver<org.geoserver.acl.persistence.jpa.domain.JpaRule> priorityResolver() {
         return new PriorityResolver<>(jparepo, org.geoserver.acl.persistence.jpa.domain.JpaRule::getPriority);
     }
@@ -82,8 +91,9 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
 
     @Override
     public Optional<Rule> findOneByPriority(long priority) {
+        Predicate predicate = QJpaRule.jpaRule.priority.eq(priority);
         try {
-            return jparepo.findOne(QJpaRule.jpaRule.priority.eq(priority)).map(modelMapper::toModel);
+            return jparepo.findOne(predicate).map(modelMapper::toModel);
         } catch (IncorrectResultSizeDataAccessException e) {
             throw new IllegalStateException("There are multiple Rules with priority " + priority);
         }
@@ -160,6 +170,7 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
     @Override
     @TransactionRequired
     public Rule save(Rule rule) {
+        lockPrioritiesForUpdate();
         Objects.requireNonNull(rule.getId());
         findDup(rule).ifPresent(this::throwConflict);
 
@@ -201,6 +212,7 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
     @Override
     @TransactionRequired
     public Rule create(@NonNull Rule rule, @NonNull InsertPosition position) {
+        lockPrioritiesForUpdate();
         if (null != rule.getId()) throw new IllegalArgumentException("Rule must have no id");
         if (rule.getPriority() < 0)
             throw new IllegalArgumentException("Negative priority is not allowed: " + rule.getPriority());
@@ -274,6 +286,7 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
     @Override
     @TransactionRequired
     public int shift(long priorityStart, long offset) {
+        lockPrioritiesForUpdate();
         if (offset <= 0) {
             throw new IllegalArgumentException("Positive offset required");
         }
@@ -290,17 +303,11 @@ public class RuleRepositoryJpaAdaptor implements RuleRepository {
     @Override
     @TransactionRequired
     public void swap(String id1, String id2) {
-
+        lockPrioritiesForUpdate();
         org.geoserver.acl.persistence.jpa.domain.JpaRule rule1 = getOrThrowIAE(id1);
         org.geoserver.acl.persistence.jpa.domain.JpaRule rule2 = getOrThrowIAE(id2);
 
-        long p1 = rule1.getPriority();
-        long p2 = rule2.getPriority();
-
-        rule1.setPriority(p2);
-        rule2.setPriority(p1);
-
-        jparepo.saveAll(List.of(rule1, rule2));
+        jparepo.swapPriorities(rule1.getId(), rule1.getPriority(), rule2.getId(), rule2.getPriority());
     }
 
     @Override

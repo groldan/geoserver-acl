@@ -11,10 +11,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class MemoryPriorityRepository<R> {
+
+    /** Lock to serialize priority-modifying operations on the in-memory TreeSet. */
+    protected final ReentrantLock priorityLock = new ReentrantLock();
 
     private final Comparator<R> comparator = (r1, r2) -> {
         long p1 = getPriority(r1);
