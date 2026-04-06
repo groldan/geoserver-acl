@@ -103,7 +103,7 @@ jobs:
           fi
 
   build-preview:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-24.04-arm
     needs: security-check
     # Run if: manual dispatch, OR (it's a PR and either same-repo or passed security check)
     if: |
